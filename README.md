@@ -31,6 +31,6 @@ Or import the GitHub repo at vercel.com/new — no extra config needed.
 
 ## `[REPLACE ME]` placeholders
 
-All in `lib/links.ts`: `email`, `linkedin`, `resume`, `instagram`, `youtube`.
+Still to fill in `lib/links.ts`: `resume`, `youtube`.
 Until they're filled in, those links point at `#contact` and show `[REPLACE ME]` in the Contact section.
 For the resume, drop `resume.pdf` into `/public` and set `resume: "/resume.pdf"`.

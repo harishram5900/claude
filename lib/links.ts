@@ -6,10 +6,10 @@
 export const REPLACE_ME = "[REPLACE ME]";
 
 export const links = {
-  email: REPLACE_ME, // e.g. "you@domain.com" (no "mailto:")
-  linkedin: REPLACE_ME, // e.g. "https://www.linkedin.com/in/…"
+  email: "harishram7971@gmail.com",
+  linkedin: "https://www.linkedin.com/in/harish-ramasubramanian/",
   resume: REPLACE_ME, // e.g. "/resume.pdf" (drop the file in /public)
-  instagram: REPLACE_ME, // e.g. "https://instagram.com/founderharish"
+  instagram: "https://www.instagram.com/harishking8346/",
   youtube: REPLACE_ME, // e.g. "https://youtube.com/@founderharish"
   levelUpWaitlist: "https://levelup-waitlist.vercel.app",
 } as const;
