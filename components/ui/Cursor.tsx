@@ -55,13 +55,13 @@ export function Cursor() {
           y: trailY,
           translateX: "-50%",
           translateY: "-50%",
-          background: "radial-gradient(circle, rgba(226,198,133,0.35) 0%, rgba(226,198,133,0) 70%)",
+          background: "radial-gradient(circle, rgb(var(--accent) / 0.35) 0%, rgb(var(--accent) / 0) 70%)",
         }}
         animate={{ width: hovering ? 72 : 36, height: hovering ? 72 : 36, opacity: visible ? 1 : 0 }}
         transition={{ type: "spring", stiffness: 260, damping: 24 }}
       />
       <motion.div
-        className="absolute left-0 top-0 h-2 w-2 rounded-full bg-gold-light mix-blend-difference"
+        className="absolute left-0 top-0 h-2 w-2 rounded-full bg-accent mix-blend-difference"
         style={{ x, y, translateX: "-50%", translateY: "-50%" }}
         animate={{ scale: hovering ? 0.5 : 1, opacity: visible ? 1 : 0 }}
         transition={{ type: "spring", stiffness: 400, damping: 28 }}

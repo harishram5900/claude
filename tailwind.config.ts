@@ -1,52 +1,46 @@
 import type { Config } from "tailwindcss";
 
-/**
- * Brand design tokens — mirrored from the pitch deck so the deck, resume
- * and this site read as one identity. Colors resolve to the RGB-channel CSS
- * variables in app/globals.css so opacity modifiers (bg-black/60) work.
- */
+/** Semantic color tokens → CSS variables in app/globals.css (themeable). */
+const token = (name: string) => `rgb(var(--${name}) / <alpha-value>)`;
+
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./lib/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        "cream": "rgb(var(--cream-rgb) / <alpha-value>)",
-        "cream-2": "rgb(var(--cream-2-rgb) / <alpha-value>)",
-        "black": "rgb(var(--black-rgb) / <alpha-value>)",
-        "charcoal": "rgb(var(--charcoal-rgb) / <alpha-value>)",
-        "gold": "rgb(var(--gold-rgb) / <alpha-value>)",
-        "gold-light": "rgb(var(--gold-light-rgb) / <alpha-value>)",
-        "gray": "rgb(var(--gray-rgb) / <alpha-value>)",
-        "gray-light": "rgb(var(--gray-light-rgb) / <alpha-value>)",
+        bg: token("bg"),
+        surface: token("surface"),
+        "surface-2": token("surface-2"),
+        fg: token("fg"),
+        muted: token("muted"),
+        accent: token("accent"),
+        "accent-2": token("accent-2"),
+        "on-accent": token("on-accent"),
+        line: token("line"),
       },
       fontFamily: {
         display: ["var(--font-lora)", "Georgia", "serif"],
         sans: ["var(--font-poppins)", "system-ui", "sans-serif"],
       },
       fontSize: {
-        // Fluid display sizes: phone → 4K
-        "display-xl": ["clamp(3rem, 9vw, 8.75rem)", { lineHeight: "0.95", letterSpacing: "-0.035em" }],
-        "display-lg": ["clamp(2.5rem, 6.5vw, 6rem)", { lineHeight: "1", letterSpacing: "-0.03em" }],
+        "display-xl": ["clamp(2.5rem, 6vw, 6.25rem)", { lineHeight: "0.98", letterSpacing: "-0.035em" }],
         "display-md": ["clamp(2rem, 4.5vw, 4rem)", { lineHeight: "1.05", letterSpacing: "-0.025em" }],
       },
-      maxWidth: {
-        page: "88rem",
-      },
+      maxWidth: { page: "84rem" },
       keyframes: {
-        marquee: {
-          from: { transform: "translateX(0)" },
-          to: { transform: "translateX(-50%)" },
-        },
+        marquee: { from: { transform: "translateX(0)" }, to: { transform: "translateX(-50%)" } },
         drift: {
           "0%, 100%": { transform: "translate(0, 0) scale(1)" },
-          "33%": { transform: "translate(6%, -4%) scale(1.08)" },
-          "66%": { transform: "translate(-5%, 5%) scale(0.95)" },
+          "50%": { transform: "translate(5%, -4%) scale(1.08)" },
         },
+        blink: { "0%, 49%": { opacity: "1" }, "50%, 100%": { opacity: "0" } },
+        spin: { to: { transform: "rotate(360deg)" } },
       },
       animation: {
-        marquee: "marquee 40s linear infinite",
-        drift: "drift 22s ease-in-out infinite",
-        "drift-slow": "drift 34s ease-in-out infinite reverse",
+        marquee: "marquee 38s linear infinite",
+        drift: "drift 20s ease-in-out infinite",
+        blink: "blink 1s step-end infinite",
+        "spin-slow": "spin 18s linear infinite",
       },
     },
   },

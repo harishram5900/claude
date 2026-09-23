@@ -3,107 +3,109 @@
 @tailwind utilities;
 
 /* ------------------------------------------------------------------ */
-/* Brand tokens (shared with the pitch deck + resume)                  */
+/* Theme tokens — RGB channels so Tailwind opacity modifiers work.     */
+/* Dark is the default; [data-theme="light"] swaps the palette.        */
+/* Gold matches the LevelUp brand (#F6C445 / #D89A1F).                 */
 /* ------------------------------------------------------------------ */
-:root {
-  /* Hex tokens (as specified in the brand system) */
-  --cream: #f6f1e6;
-  --cream-2: #ede3cc;
-  --black: #0e0d0c;
-  --charcoal: #211f1c;
-  --gold: #b08d3e;
-  --gold-light: #e2c685;
-  --gray: #6b6560;
-  /* Secondary text on dark surfaces — --gray fails WCAG AA on --black,
-     so dark sections use this lighter warm gray instead (≈7:1). */
-  --gray-light: #a8a097;
-
-  /* Same tokens as RGB channels so Tailwind opacity modifiers work
-     (e.g. border-cream/10). Keep these in sync with the hex values above. */
-  --cream-rgb: 246 241 230;
-  --cream-2-rgb: 237 227 204;
-  --black-rgb: 14 13 12;
-  --charcoal-rgb: 33 31 28;
-  --gold-rgb: 176 141 62;
-  --gold-light-rgb: 226 198 133;
-  --gray-rgb: 107 101 96;
-  --gray-light-rgb: 168 160 151;
-
+:root,
+:root[data-theme="dark"] {
+  --bg: 11 10 8;
+  --surface: 21 19 16;
+  --surface-2: 32 29 25;
+  --fg: 246 241 230;
+  --muted: 168 160 151;
+  --accent: 246 196 69;
+  --accent-2: 216 154 31;
+  --on-accent: 11 10 8;
+  --line: 246 241 230;
   color-scheme: dark;
 }
 
+:root[data-theme="light"] {
+  --bg: 250 248 243;
+  --surface: 255 255 255;
+  --surface-2: 240 235 224;
+  --fg: 14 13 12;
+  --muted: 96 90 84;
+  --accent: 168 112 10;
+  --accent-2: 216 154 31;
+  --on-accent: 255 255 255;
+  --line: 14 13 12;
+  color-scheme: light;
+}
+
 html {
-  scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+}
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
 }
 
 body {
-  background: var(--black);
-  color: var(--cream);
+  background: rgb(var(--bg));
+  color: rgb(var(--fg));
   font-family: var(--font-poppins), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
 
 ::selection {
-  background: var(--gold-light);
-  color: var(--black);
+  background: rgb(var(--accent));
+  color: rgb(var(--on-accent));
 }
 
-/* Visible, on-brand keyboard focus everywhere */
 :focus-visible {
-  outline: 2px solid var(--gold-light);
+  outline: 2px solid rgb(var(--accent));
   outline-offset: 3px;
-  border-radius: 4px;
-}
-.light-surface :focus-visible {
-  outline-color: var(--gold);
+  border-radius: 6px;
 }
 
-/* Anchored sections clear the sticky nav */
 section[id] {
   scroll-margin-top: 5rem;
 }
 
-/* Hide the native cursor only when the custom cursor is active */
 html.has-custom-cursor,
 html.has-custom-cursor * {
   cursor: none !important;
 }
 
-/* ------------------------------------------------------------------ */
-/* Film grain overlay for dark sections                               */
-/* ------------------------------------------------------------------ */
-.grain {
-  position: relative;
-  isolation: isolate;
-}
+/* Film grain */
 .grain::after {
   content: "";
-  position: absolute;
+  position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 1;
-  opacity: 0.07;
+  z-index: 90;
+  opacity: 0.05;
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Hairline rule used throughout for editorial structure */
-.hairline {
-  background: linear-gradient(90deg, transparent, rgba(226, 198, 133, 0.35), transparent);
-  height: 1px;
+/* Gold gradient text */
+.text-gradient {
+  background: linear-gradient(120deg, rgb(var(--accent)) 0%, #fff3c4 45%, rgb(var(--accent-2)) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+:root[data-theme="light"] .text-gradient {
+  background: linear-gradient(120deg, rgb(var(--accent)) 0%, #d89a1f 50%, #8a5a06 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
   *,
   *::before,
   *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }
