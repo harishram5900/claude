@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------ */
+/* Brand tokens (shared with the pitch deck + resume)                  */
+/* ------------------------------------------------------------------ */
+:root {
+  /* Hex tokens (as specified in the brand system) */
+  --cream: #f6f1e6;
+  --cream-2: #ede3cc;
+  --black: #0e0d0c;
+  --charcoal: #211f1c;
+  --gold: #b08d3e;
+  --gold-light: #e2c685;
+  --gray: #6b6560;
+  /* Secondary text on dark surfaces — --gray fails WCAG AA on --black,
+     so dark sections use this lighter warm gray instead (≈7:1). */
+  --gray-light: #a8a097;
+
+  /* Same tokens as RGB channels so Tailwind opacity modifiers work
+     (e.g. border-cream/10). Keep these in sync with the hex values above. */
+  --cream-rgb: 246 241 230;
+  --cream-2-rgb: 237 227 204;
+  --black-rgb: 14 13 12;
+  --charcoal-rgb: 33 31 28;
+  --gold-rgb: 176 141 62;
+  --gold-light-rgb: 226 198 133;
+  --gray-rgb: 107 101 96;
+  --gray-light-rgb: 168 160 151;
+
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--black);
+  color: var(--cream);
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--gold-light);
+  color: var(--black);
+}
+
+/* Visible, on-brand keyboard focus everywhere */
+:focus-visible {
+  outline: 2px solid var(--gold-light);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.light-surface :focus-visible {
+  outline-color: var(--gold);
+}
+
+/* Anchored sections clear the sticky nav */
+section[id] {
+  scroll-margin-top: 5rem;
+}
+
+/* Hide the native cursor only when the custom cursor is active */
+html.has-custom-cursor,
+html.has-custom-cursor * {
+  cursor: none !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* Film grain overlay for dark sections                               */
+/* ------------------------------------------------------------------ */
+.grain {
+  position: relative;
+  isolation: isolate;
+}
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Hairline rule used throughout for editorial structure */
+.hairline {
+  background: linear-gradient(90deg, transparent, rgba(226, 198, 133, 0.35), transparent);
+  height: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
