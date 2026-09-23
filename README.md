@@ -1,29 +1,25 @@
-# Harish Ramasubramanian — portfolio
+# harish·dev — Harish Ramasubramanian
 
-Next.js 15 (App Router) · TypeScript · Tailwind CSS · Framer Motion · React Three Fiber (3D globe) · Lenis smooth scroll.
-Dark/light themes, custom cursor, tilt cards, typed hero roles, scroll progress.
+Single-page portfolio: Vite + React 18 + Tailwind CSS v4 + Three.js (particle hero, wireframe shapes,
+live GLSL shader playground, day/night Earth globe) + Motion.
+
+Layout, motion and 3D effects are adapted from the adi·dev portfolio template by Adi Chandra Narayana Dasari.
 
 ## Run locally
 
 ```bash
-npm install && npm run dev   # http://localhost:3000
+npm install && npm run dev
 ```
 
 ## Edit content
 
-| Path | What |
-| --- | --- |
-| `lib/profile.ts` | **All content**: roles, stats, ventures, awards, pitches, experience, skills, portrait |
-| `lib/links.ts` | Email, LinkedIn, Instagram, résumé, YouTube |
-| `app/globals.css` | Theme colors (dark + light) |
-| `components/sections/*` | One file per section |
-| `components/three/Globe.tsx` | The 3D globe |
+Everything is in the data block at the top of `src/app/App.tsx`
+(`ME`, `ROLES`, `EXPERIENCE`, `TOOLKIT`, `FOUNDED`, `CO_FOUNDED`, `AWARDS`, `PITCHES`).
 
-### Add your photo
-Save a square photo as `public/harish.jpg`, then set `portrait: "/harish.jpg"` in `lib/profile.ts`.
-
-### Still to fill in
-`resume` and `youtube` in `lib/links.ts` — they stay hidden on the site until set.
+- **Photo:** save a square photo as `public/harish.jpg` (initials show until then).
+- **Project screenshots:** optional — see `public/projects/README.txt`.
+- **Contact form:** sends via FormSubmit to the email in `ME.email`. The first submission triggers a
+  one-time activation email from FormSubmit — click the link in it once.
 
 ## Deploy
 
