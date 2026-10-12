@@ -49,10 +49,20 @@ async function officialLookup(name: string, state?: string | null) {
     const data = (await res.json()) as { results?: Record<string, unknown>[] };
     const rows = data.results ?? [];
     const target = norm(name);
-    // Prefer an exact name match, then the main campus (largest enrollment).
+    // 1) exact name, 2) federal name that starts with ours ("University of Michigan" →
+    // "University of Michigan-Ann Arbor"), 3) every word of ours present, in order.
+    // Never fall back to an unrelated school that merely shares a word (e.g. Michigan State).
+    const bySize = (a: Record<string, unknown>, b: Record<string, unknown>) => Number(b["latest.student.size"] ?? 0) - Number(a["latest.student.size"] ?? 0);
+    const words = target.split(" ");
+    const inOrder = (n: string) => {
+      let i = 0;
+      for (const w of n.split(" ")) if (w === words[i]) i++;
+      return i === words.length;
+    };
     const best =
       rows.find((r) => norm(String(r["school.name"])) === target) ??
-      [...rows].sort((a, b) => Number(b["latest.student.size"] ?? 0) - Number(a["latest.student.size"] ?? 0))[0];
+      rows.filter((r) => norm(String(r["school.name"])).startsWith(target + " ")).sort(bySize)[0] ??
+      rows.filter((r) => inOrder(norm(String(r["school.name"])))).sort(bySize)[0];
     if (!best) return Response.json({ error: "Not found" }, { status: 404 });
     return Response.json({ stats: officialStats(best) });
   } catch {
