@@ -24,6 +24,20 @@ export const SC_FIELDS = [
 type Rec = Record<string, unknown>;
 const n = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
 
+/** "California State University-Fullerton" → "CSU Fullerton"; short names pass through. */
+export function shortName(name: string) {
+  const i = name.lastIndexOf("-");
+  const head = i > 0 ? name.slice(0, i).trim() : "";
+  const campus = i > 0 ? name.slice(i + 1).trim() : "";
+  if (head.split(/\s+/).length >= 2 && /^[A-Z]/.test(campus)) {
+    const acronym = head.split(/\s+/).filter((w) => /^[A-Z]/.test(w)).map((w) => w[0]).join("");
+    return /^main campus$/i.test(campus) ? acronym : `${acronym} ${campus}`;
+  }
+  if (name.length <= 26) return name;
+  const words = name.split(/\s+/).filter((w) => /^[A-Z]/.test(w) && !["University", "College", "Of", "The"].includes(w));
+  return words.slice(0, 2).join(" ") || name;
+}
+
 export function fromScorecard(r: Rec): College | null {
   const name = r["school.name"] as string | undefined;
   const rate = n(r["latest.admissions.admission_rate.overall"]);
@@ -38,8 +52,7 @@ export function fromScorecard(r: Rec): College | null {
   const admitRate = rate ?? 0.85; // open-admission schools report no rate
   const ownership = n(r["school.ownership"]);
   const url = (r["school.school_url"] as string | undefined) ?? "";
-  const words = name.split(/\s+/);
-  const short = name.length > 22 ? words.filter((w) => /^[A-Z]/.test(w) && !["University", "College", "Of", "The"].includes(w)).slice(0, 2).join(" ") || words[0] : name;
+  const short = shortName(name);
   return {
     id: `sc-${r.id}`,
     name,
