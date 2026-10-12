@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "tsx tests/engine.test.ts && tsx tests/commonapp.test.ts && tsx tests/pdf.test.ts"
+    "test": "tsx tests/engine.test.ts && tsx tests/calibration.test.ts && tsx tests/commonapp.test.ts && tsx tests/pdf.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.133.0",

@@ -105,7 +105,27 @@ export function collegeSatRange(c: College): [number, number] {
 const SERVICE_ACADEMIES = ["westpoint", "navy", "airforce"];
 // A file that sits at the admitted-class median on every dimension beats the overall admit rate,
 // because the applicant pool is weaker on average than the admitted class.
-const BASE_OFFSET = (t: number) => lerp(0.8, 0.55, t);
+/**
+ * Model parameters. The "most selective" end (index 0) is fitted to real outcome data:
+ * Harvard admit rates by academic-index decile for applicants without hooks, released in
+ * SFFA v. Harvard (see src/data/calibration.ts and scripts/calibrate.ts). The accessible end
+ * (index 1) is set from published admit rates and GPA/score ranges.
+ */
+export const PARAMS = {
+  base: [0.959, 0.55],
+  gpaW: [0.4, 1.0],
+  testW: [0.3, 0.35],
+  rigorW: [0.4, 0.3],
+  ecW: [0.835, 0.15],
+  essayW: [0.4, 0.08],
+  recsW: [0.3, 0.05],
+  screen: [-1.4, -2.3],
+  screenPenalty: [0.515, 0.8],
+  athleteLogit: 5.2, // SFFA: recruited athletes admitted at ~83–86%
+  legacyLogit: 1.6, // ~5x odds at schools that consider legacy (SFFA: 33.6% legacy vs 5.9% overall)
+};
+const P = (k: "base" | "gpaW" | "testW" | "rigorW" | "ecW" | "essayW" | "recsW" | "screen" | "screenPenalty", t: number) => lerp(PARAMS[k][0], PARAMS[k][1], t);
+const BASE_OFFSET = (t: number) => P("base", t);
 
 const IMPACT_W: Record<Activity["impact"], number> = { school: 1, local: 1.6, state: 2.6, national: 4, international: 4.6 };
 const AWARD_W = { school: 0.5, regional: 1, state: 2, national: 4.5, international: 6 } as const;
@@ -233,12 +253,12 @@ function core(p: Profile, c: College, plan: AppPlan): Core {
 
   // ---- weights (logit units per z) interpolated by selectivity
   const W = {
-    gpa: lerp(0.5, 1.0, t),
-    test: lerp(0.45, 0.35, t),
-    rigor: lerp(0.4, 0.3, t),
-    ec: lerp(0.7, 0.15, t),
-    essay: lerp(0.4, 0.08, t),
-    recs: lerp(0.3, 0.05, t),
+    gpa: P("gpaW", t),
+    test: P("testW", t),
+    rigor: P("rigorW", t),
+    ec: P("ecW", t),
+    essay: P("essayW", t),
+    recs: P("recsW", t),
   };
 
   // ---- GPA
@@ -318,16 +338,17 @@ function core(p: Profile, c: College, plan: AppPlan): Core {
 
   // Academic screen: at selective schools an academic profile far below the class is rarely read past
   const academicZ = (zGpa * 1.2 + (testW ? zTest : zGpa) * 0.9 + zRigor * 0.7) / 2.8;
-  const screen = lerp(-1.1, -2.3, t);
-  if (academicZ < screen) L -= (screen - academicZ) * lerp(1.2, 0.8, t);
+  const screen = P("screen", t);
+  if (academicZ < screen) L -= (screen - academicZ) * P("screenPenalty", t);
 
   // Hooks and context
   if (p.recruitedAthlete && tier <= 3) {
-    L += lerp(2.6, 1.6, t * 2);
+    // SFFA data: recruited athletes were admitted at ~86% at Harvard, even with middling academics.
+    L += lerp(PARAMS.athleteLogit, PARAMS.athleteLogit / 2, Math.min(1, t * 2));
     flags.push("Recruited-athlete status assumes a coach is formally supporting your application.");
   }
   if (p.legacyAt.includes(c.id)) {
-    if (c.considersLegacy) L += tier <= 2 ? 0.9 : 0.35;
+    if (c.considersLegacy) L += tier <= 2 ? PARAMS.legacyLogit : PARAMS.legacyLogit / 2;
     else flags.push(`${c.short} does not give legacy preference, so legacy status was not counted.`);
   }
   if (p.firstGen && tier <= 4) L += lerp(0.35, 0.1, t);
@@ -345,7 +366,9 @@ function core(p: Profile, c: College, plan: AppPlan): Core {
     L += Math.log(ratio) * early;
   }
 
-  let maxP = p.recruitedAthlete && tier <= 3 ? 0.92 : clamp(c.admitRate * 6 + 0.03, 0.12, 0.97);
+  let maxP = p.recruitedAthlete && tier <= 3 ? 0.95 : clamp(c.admitRate * 6 + 0.03, 0.12, 0.97);
+  // The ceiling applies to unhooked applicants; legacies at schools that weigh it clear it (SFFA: ~34% admitted).
+  if (p.legacyAt.includes(c.id) && c.considersLegacy) maxP = Math.max(maxP, 0.75);
   // Service academies also require a congressional nomination and a fitness assessment.
   if (SERVICE_ACADEMIES.includes(c.id)) {
     maxP = Math.min(maxP, 0.35);

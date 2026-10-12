@@ -19,7 +19,7 @@ const FEATURES = [
 const FAQ = [
   {
     q: "How accurate are the chances?",
-    a: "They're estimates from a transparent model, not predictions. Each college is calibrated with its real admit rate, test ranges and typical GPA, and the most-viewed schools are checked against their latest reported cycle. No outside tool can see the rest of the applicant pool or a school's institutional needs, so use AdmitLens to find your biggest levers, not to forecast your fate.",
+    a: "They're estimates from a transparent model, not predictions. Each college is anchored to its real admit rate, test ranges and typical GPA. The most selective end is fitted to real outcomes from Harvard's admissions data released in SFFA v. Harvard, where the model matches actual admit rates for every academic decile to within about 20%. No outside tool can see the rest of the applicant pool or a school's institutional needs, so use AdmitLens to find your biggest levers, not to forecast your fate.",
   },
   {
     q: "Does it connect to my Common App account?",

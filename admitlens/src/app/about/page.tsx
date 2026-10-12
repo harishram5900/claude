@@ -33,6 +33,19 @@ export default function About() {
           </p>
         </Card>
         <Card className="space-y-3 p-6">
+          <h2 className="font-display text-xl font-semibold">Calibrated on real admissions outcomes</h2>
+          <p>
+            Individual applicants' results aren't public, but one detailed dataset is: Harvard's admissions records released in the <i>SFFA v. Harvard</i> case, covering applicants to the Classes of 2014–2019. Economists published admit rates by academic decile for applicants without hooks, from 0.01% in the bottom decile to 14.6% in the top. AdmitLens simulates 120 realistic applicants per decile and fits the most-selective end of its model so its average predictions match those real outcomes, adjusted to today's admit rate. Every decile from 2 to 10 lands within about 20% of the real figure, and an automated test fails if it drifts. The same data sets the legacy effect (about 5× the odds) and recruited-athlete admit rates (about 85%).
+          </p>
+          <p className="text-sm text-muted">
+            Source:{" "}
+            <a className="underline underline-offset-2" href="https://gwern.net/doc/sociology/2022-arcidiacono.pdf" target="_blank" rel="noreferrer">
+              Arcidiacono, Kinsler &amp; Ransom, "Legacy and Athlete Preferences at Harvard," Economics of Education Review 88 (2022)
+            </a>
+            . Less selective schools are anchored to their published admit rates and score ranges, since comparable outcome data isn't public for them.
+          </p>
+        </Card>
+        <Card className="space-y-3 p-6">
           <h2 className="font-display text-xl font-semibold">Testing the model</h2>
           <p>
             An automated test suite runs on every change. It checks that the same student always scores lower at more selective schools, that chances never go down when GPA, scores or activities improve (300 random cases), that 200 randomly generated applicants receive distinct chances and distinct written memos, that results are deterministic, and that essays full of clichés score far below specific, reflective writing.
