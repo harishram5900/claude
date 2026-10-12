@@ -3,17 +3,20 @@ import { AlarmClock, ArrowRight, ClipboardList, GraduationCap, Heart, Map, PenLi
 import Link from "next/link";
 import { Badge, Button, ButtonLink, Card, CardHeader, categoryTone, Empty, fmtPct, Gauge, PageHeader, Progress } from "@/components/ui";
 import { getCollege } from "@/data/colleges";
-import { matchScholarship, SCHOLARSHIPS } from "@/data/scholarships";
 import { analyzeEssay } from "@/lib/essay";
 import { evaluate, unweightedGpa } from "@/lib/engine";
 import { buildRoadmap, currentPhase } from "@/lib/roadmap";
 import { SAMPLE_PROFILE } from "@/lib/sample";
 import { useStore } from "@/lib/store";
 import { useCollege } from "@/lib/useCollege";
+import { money } from "@/lib/grantscout";
+import { useFunding } from "@/lib/useFunding";
+import { fmtDeadline } from "@/components/funding/ResultCard";
 
 export default function Dashboard() {
   const { profile, setProfile, profileComplete, tracker, dreamCollege, roadmapDone, ready } = useStore();
   const { college: dream } = useCollege(dreamCollege);
+  const funding = useFunding();
   if (!ready) return null;
 
   if (profileComplete < 20)
@@ -37,8 +40,7 @@ export default function Dashboard() {
   const ev = dream ? evaluate(profile, dream) : null;
   const upcoming = tracker.filter((t) => t.deadline && !["Submitted", "Admitted", "Denied", "Waitlisted", "Committed"].includes(t.status)).sort((a, b) => a.deadline.localeCompare(b.deadline)).slice(0, 5);
   const essay = profile.personalStatement ? analyzeEssay(profile.personalStatement) : null;
-  const ctx = { grade: Math.min(profile.grade, 12), gpa: unweightedGpa(profile), state: profile.state, major: profile.intendedMajor, firstGen: profile.firstGen, lowIncome: profile.lowIncome };
-  const scholarships = SCHOLARSHIPS.map((s) => ({ s, m: matchScholarship(s, ctx) })).filter((x) => !x.m.blockers.length).sort((a, b) => b.m.score - a.m.score).slice(0, 4);
+  const scholarships = funding.top.slice(0, 4);
   const phase = currentPhase(profile.grade);
   const next = buildRoadmap(profile, dream).filter((m) => m.order >= phase && !roadmapDone[m.id]).slice(0, 4);
 
@@ -135,16 +137,16 @@ export default function Dashboard() {
         </Card>
 
         <Card className="lg:col-span-2">
-          <CardHeader title="Top scholarship matches" icon={<Trophy size={16} />} action={<Link href="/scholarships" className="text-sm text-brand">All →</Link>} />
+          <CardHeader title="Top funding matches (GrantScout)" icon={<Trophy size={16} />} action={<Link href="/scholarships" className="text-sm text-brand">All →</Link>} />
           <div className="grid gap-3 p-5 sm:grid-cols-2">
-            {scholarships.map(({ s, m }) => (
-              <a key={s.id} href={s.url} target="_blank" rel="noreferrer" className="rounded-xl border border-line p-3 transition hover:border-brand">
+            {scholarships.map((x) => (
+              <a key={x.rec.name} href={x.rec.source_url} target="_blank" rel="noreferrer" className="rounded-xl border border-line p-3 transition hover:border-brand">
                 <div className="flex justify-between gap-2">
-                  <span className="font-medium">{s.name}</span>
-                  <span className="text-xs text-muted">{m.score}%</span>
+                  <span className="font-medium">{x.rec.name}</span>
+                  <span className="shrink-0 text-xs text-muted">~{Math.round(x.winProb * 100)}% odds</span>
                 </div>
-                <div className="mt-1 text-sm text-good">{s.amount}</div>
-                <div className="text-xs text-muted">Deadline: {s.deadline}</div>
+                <div className="mt-1 text-sm text-good">{money(x.rec)}</div>
+                <div className="text-xs text-muted">Deadline: {fmtDeadline(x)}</div>
               </a>
             ))}
           </div>

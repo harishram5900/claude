@@ -9,7 +9,7 @@ chances, critiques every part of your file and shows what would raise your odds.
 - **Admissions simulator**: 1–6 reader ratings per dimension, calibrated chance with a range, a reader memo in the voice of that school's office, and what-if improvements that are re-simulated to show the real gain. Includes a "same file, different readers" comparison.
 - **College data**: 139 colleges with detailed admissions profiles (admit and early rates, middle-50% SAT/ACT, typical GPA, test policy, legacy policy, residency preference, priorities, signature programs, supplement themes), plus live search across every US four-year college through the Dept. of Education College Scorecard API.
 - **Essay Lab**: live scoring (voice, specificity, structure, reflection, mechanics, college fit), cliché, filler and passive-voice detection, "why us" specificity checks, and an optional AI reader critique. It coaches; it does not ghostwrite.
-- **Scholarships**: 47 national and state programs ranked by fit with the student's profile.
+- **GrantScout funding finder** (ported from the GrantScout Cowork skill in `grantscout/skill`): eligibility filtering by citizenship and immigration status (U.S. statuses plus home-country and diaspora ties), grade, age, GPA, background and field. Results are sorted by location ring (county → metro → state → national → home country → global) and ranked by GrantScout's priority score (fit via TF-IDF, award size, expected value from estimated odds, urgency, unclaimed-money signal). It also includes a scam filter, a free-money checklist, an essay-reuse plan, "connect the dots" search angles, a per-ring research plan, an "add an award" form, import of GrantScout `found.json`/`library.json`, CSV export and a shareable PDF that never prints status, income or background and hides status-revealing awards by default.
 - **Tracker**: statuses, plans, auto-filled deadlines, per-college checklists and a list-balance check.
 - **Roadmap**: a grade-by-grade map to the student's dream school, with milestones prioritized by the gaps that school's reader would flag.
 - **Common App import**: upload the Common App preview PDF (parsed in the browser) or paste the text. Common App has no public API for third-party apps, so import works from the student's own export.
@@ -21,7 +21,7 @@ chances, critiques every part of your file and shows what would raise your odds.
 cd admitlens
 npm install
 npm run dev     # http://localhost:3000
-npm test        # engine calibration + Common App parser tests
+npm test        # admissions engine, SFFA calibration, GrantScout, Common App parser and PDF tests
 ```
 
 ## Environment variables (optional)

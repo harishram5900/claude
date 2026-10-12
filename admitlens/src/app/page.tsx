@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ButtonLink, Card, fmtPct } from "@/components/ui";
 import { COLLEGES, getCollege } from "@/data/colleges";
 import { RESOURCES } from "@/data/resources";
-import { SCHOLARSHIPS } from "@/data/scholarships";
+import { FUNDING_LIBRARY } from "@/data/funding";
 import { evaluate } from "@/lib/engine";
 import { SAMPLE_PROFILE } from "@/lib/sample";
 
@@ -12,7 +12,7 @@ const FEATURES = [
   { icon: PenLine, title: "Essay Lab", body: "Live feedback on voice, specificity, structure and reflection, plus checks for 'why us' essays that could describe any school.", href: "/essays" },
   { icon: Map, title: "Roadmap", body: "A grade-by-grade plan to your dream school, prioritized by the gaps its readers would flag.", href: "/roadmap" },
   { icon: ClipboardList, title: "List builder & tracker", body: "A balanced list of reaches, targets and likely schools, with deadlines and checklists filled in.", href: "/tracker" },
-  { icon: Trophy, title: "Scholarships", body: `${SCHOLARSHIPS.length} national and state programs matched to your grade, GPA, state and story.`, href: "/scholarships" },
+  { icon: Trophy, title: "GrantScout funding finder", body: "Scholarships, grants, fellowships and paid programs filtered by your citizenship status, grade and location, sorted closest first and ranked by your odds.", href: "/scholarships" },
   { icon: Library, title: "Learn from real admits", body: "Essays and blogs by admitted students, published on the colleges' own sites.", href: "/learn" },
 ];
 
@@ -110,7 +110,7 @@ export default function Home() {
           {[
             [String(COLLEGES.length), "colleges profiled in depth", `${verified} checked against their latest reported cycle`],
             ["6,000+", "colleges searchable live", "U.S. Dept. of Education College Scorecard"],
-            [String(SCHOLARSHIPS.length), "scholarships matched", "national and state programs"],
+            [String(FUNDING_LIBRARY.length), "funding programs screened", "filtered by status, grade and location"],
             ["0", "accounts or data sold", "everything stays on your device"],
           ].map(([n, l, s]) => (
             <div key={l} className="bg-surface px-5 py-5">

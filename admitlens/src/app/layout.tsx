@@ -34,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <StoreProvider>
           <Nav />
           <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">{children}</main>
-          <footer className="mt-16 border-t border-line">
+          <footer className="mt-16 border-t border-line print:hidden">
             <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
               <div>
                 <div className="flex items-center gap-2">
@@ -47,7 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
               {[
                 ["Plan", [["Simulator", "/simulate"], ["Roadmap", "/roadmap"], ["Tracker", "/tracker"]]],
-                ["Write & fund", [["Essay Lab", "/essays"], ["Scholarships", "/scholarships"], ["Learn from real admits", "/learn"]]],
+                ["Write & fund", [["Essay Lab", "/essays"], ["GrantScout funding", "/scholarships"], ["Learn from real admits", "/learn"]]],
                 ["About", [["How it works", "/about"], ["Your data & privacy", "/about#privacy"], ["Colleges", "/colleges"]]],
               ].map(([h, links]) => (
                 <div key={h as string}>

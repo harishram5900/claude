@@ -48,7 +48,45 @@ export interface Profile {
   legacyAt: string[]; // college ids
   significantResponsibilities: boolean; // work, caregiving
   importedFrom?: string;
+  funding?: FundingExtras;
 }
+
+/** GrantScout intake. Status, income and background are optional, stay on this device, and are never printed. */
+export interface FundingExtras {
+  age: number | null;
+  city: string;
+  county: string;
+  metro: string;
+  country: string; // ISO-2
+  residenceStatus: string; // "" = prefer not to say
+  hasWorkAuthorization: boolean;
+  citizenships: string[]; // ISO-2, other than country of residence
+  countryTies: string[]; // e.g. "IN:oci"
+  heritage: string[];
+  background: string[]; // first_gen, low_income, military_family, foster_youth, disability, ...
+  parentEmployers: string[];
+  extraInterests: string[];
+  wants: string[];
+  story: string;
+}
+
+export const EMPTY_FUNDING: FundingExtras = {
+  age: null,
+  city: "",
+  county: "",
+  metro: "",
+  country: "US",
+  residenceStatus: "",
+  hasWorkAuthorization: false,
+  citizenships: [],
+  countryTies: [],
+  heritage: [],
+  background: [],
+  parentEmployers: [],
+  extraInterests: [],
+  wants: [],
+  story: "",
+};
 
 export const EMPTY_PROFILE: Profile = {
   name: "",

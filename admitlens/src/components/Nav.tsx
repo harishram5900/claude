@@ -13,7 +13,7 @@ export const NAV = [
   { href: "/simulate", label: "Simulator", icon: GraduationCap },
   { href: "/colleges", label: "Colleges", icon: Building2 },
   { href: "/essays", label: "Essay Lab", icon: PenLine },
-  { href: "/scholarships", label: "Scholarships", icon: Trophy },
+  { href: "/scholarships", label: "Funding", icon: Trophy },
   { href: "/tracker", label: "Tracker", icon: ClipboardList },
   { href: "/roadmap", label: "Roadmap", icon: Map },
   { href: "/learn", label: "Learn", icon: Library },
@@ -25,7 +25,7 @@ export function Nav() {
   const { profileComplete, ready } = useStore();
   useEffect(() => setOpen(false), [path]);
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-bg/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-line bg-bg/80 backdrop-blur-xl print:hidden">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6">
         <Link href="/" aria-label="AdmitLens home" className="shrink-0">
           <Logo />
