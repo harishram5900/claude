@@ -100,6 +100,11 @@ export function collegeSatRange(c: College): [number, number] {
   return [mid - 90, mid + 70];
 }
 
+const SERVICE_ACADEMIES = ["westpoint", "navy", "airforce"];
+// A file that sits at the admitted-class median on every dimension beats the overall admit rate,
+// because the applicant pool is weaker on average than the admitted class.
+const BASE_OFFSET = (t: number) => lerp(0.8, 0.55, t);
+
 const IMPACT_W: Record<Activity["impact"], number> = { school: 1, local: 1.6, state: 2.6, national: 4, international: 4.6 };
 const AWARD_W = { school: 0.5, regional: 1, state: 2, national: 4.5, international: 6 } as const;
 const ACT_WEIGHTS = [1, 0.7, 0.5, 0.35, 0.25, 0.2, 0.15, 0.1, 0.1, 0.1];
@@ -303,7 +308,7 @@ function core(p: Profile, c: College, plan: AppPlan): Core {
   // ---- personal / context
   const zPersonal = clamp(zEssay * 0.55 + recZ * 0.45 + (p.significantResponsibilities ? 0.3 : 0), -3, 2);
 
-  let L = logit(c.admitRate) + lerp(0.95, 0.55, t);
+  let L = logit(c.admitRate) + BASE_OFFSET(t);
   L += W.gpa * zGpa + testW * zTest + W.rigor * zRigor + W.ec * (zEc * 0.8 + zAwards * 0.2) + W.essay * zEssay + W.recs * recZ;
   if (tier <= 2 && c.testPolicy === "optional" && !(sat && p.submitTests)) L -= 0.15;
   // Required scores missing = incomplete application; readers don't review incomplete files.
@@ -338,7 +343,12 @@ function core(p: Profile, c: College, plan: AppPlan): Core {
     L += Math.log(ratio) * early;
   }
 
-  const maxP = p.recruitedAthlete && tier <= 3 ? 0.92 : clamp(c.admitRate * 7 + 0.04, 0.12, 0.97);
+  let maxP = p.recruitedAthlete && tier <= 3 ? 0.92 : clamp(c.admitRate * 6 + 0.03, 0.12, 0.97);
+  // Service academies also require a congressional nomination and a fitness assessment.
+  if (SERVICE_ACADEMIES.includes(c.id)) {
+    maxP = Math.min(maxP, 0.35);
+    flags.push(`${c.short} also requires a congressional nomination, a physical fitness assessment and a medical exam. This estimate assumes you secure them.`);
+  }
 
   // ---- dimension report
   const dims: DimensionResult[] = [];
@@ -613,7 +623,7 @@ export function evaluate(p: Profile, c: College, plan: AppPlan = "RD"): Evaluati
   const chanceHigh = toChance(k.logitScore + spread, k.maxP);
   const rel = chance / k.maxP;
   const { memo, strengths, concerns, committeeLine } = writeMemo(p, c, tier, k, rel);
-  const overallZ = k.logitScore - logit(c.admitRate) - lerp(0.95, 0.55, (tier - 1) / 4);
+  const overallZ = k.logitScore - logit(c.admitRate) - BASE_OFFSET((tier - 1) / 4);
   const overallRating = ratingFromZ(overallZ / 1.4);
   return {
     college: c,
