@@ -1,0 +1,67 @@
+// Converts U.S. Department of Education College Scorecard records into AdmitLens colleges,
+// so every accredited four-year institution in the country can be simulated.
+import type { College } from "@/data/colleges";
+
+export const SC_FIELDS = [
+  "id",
+  "school.name",
+  "school.city",
+  "school.state",
+  "school.ownership",
+  "school.school_url",
+  "latest.admissions.admission_rate.overall",
+  "latest.admissions.sat_scores.25th_percentile.critical_reading",
+  "latest.admissions.sat_scores.25th_percentile.math",
+  "latest.admissions.sat_scores.75th_percentile.critical_reading",
+  "latest.admissions.sat_scores.75th_percentile.math",
+  "latest.admissions.act_scores.25th_percentile.cumulative",
+  "latest.admissions.act_scores.75th_percentile.cumulative",
+  "latest.admissions.test_requirements",
+  "latest.student.size",
+  "latest.cost.attendance.academic_year",
+].join(",");
+
+type Rec = Record<string, unknown>;
+const n = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+
+export function fromScorecard(r: Rec): College | null {
+  const name = r["school.name"] as string | undefined;
+  const rate = n(r["latest.admissions.admission_rate.overall"]);
+  if (!name) return null;
+  const r25 = n(r["latest.admissions.sat_scores.25th_percentile.critical_reading"]);
+  const m25 = n(r["latest.admissions.sat_scores.25th_percentile.math"]);
+  const r75 = n(r["latest.admissions.sat_scores.75th_percentile.critical_reading"]);
+  const m75 = n(r["latest.admissions.sat_scores.75th_percentile.math"]);
+  const a25 = n(r["latest.admissions.act_scores.25th_percentile.cumulative"]);
+  const a75 = n(r["latest.admissions.act_scores.75th_percentile.cumulative"]);
+  const req = n(r["latest.admissions.test_requirements"]);
+  const admitRate = rate ?? 0.85; // open-admission schools report no rate
+  const ownership = n(r["school.ownership"]);
+  const url = (r["school.school_url"] as string | undefined) ?? "";
+  const words = name.split(/\s+/);
+  const short = name.length > 22 ? words.filter((w) => /^[A-Z]/.test(w) && !["University", "College", "Of", "The"].includes(w)).slice(0, 2).join(" ") || words[0] : name;
+  return {
+    id: `sc-${r.id}`,
+    name,
+    short,
+    city: (r["school.city"] as string) ?? "",
+    state: (r["school.state"] as string) ?? "",
+    control: ownership === 1 ? "Public" : "Private",
+    enrollment: n(r["latest.student.size"]) ?? 0,
+    admitRate: Math.max(0.02, Math.min(1, admitRate)),
+    sat: r25 && m25 && r75 && m75 ? [r25 + m25, r75 + m75] : null,
+    act: a25 && a75 ? [a25, a75] : null,
+    // Scorecard does not publish GPA; estimate typical admitted GPA from selectivity.
+    gpa: Math.round(Math.max(3.1, Math.min(3.95, 3.98 - admitRate * 0.75)) * 100) / 100,
+    testPolicy: req === 1 ? "required" : req === 3 ? "blind" : "optional",
+    coa: n(r["latest.cost.attendance.academic_year"]) ?? 0,
+    plans: {},
+    considersLegacy: false,
+    deadlines: { rd: "See school site" },
+    url: url ? (url.startsWith("http") ? url : `https://${url}`) : "",
+    knownFor: [],
+    values: admitRate < 0.3 ? ["academic excellence", "personal qualities", "contribution to campus"] : ["academic preparation", "course rigor", "fit with major"],
+    supplements: [],
+    source: "scorecard",
+  };
+}
