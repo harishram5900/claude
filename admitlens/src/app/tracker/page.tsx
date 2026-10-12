@@ -2,6 +2,7 @@
 import { AlarmClock, ClipboardList, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { CollegePicker } from "@/components/CollegePicker";
+import { ListBuilder } from "@/components/ListBuilder";
 import { Badge, Card, categoryTone, cx, Empty, fmtPct, inputCls, PageHeader, Progress } from "@/components/ui";
 import { getCollege, type College } from "@/data/colleges";
 import { evaluate } from "@/lib/engine";
@@ -113,6 +114,9 @@ export default function TrackerPage() {
           </p>
         )}
       </Card>
+      <div className="mb-8">
+        <ListBuilder />
+      </div>
       {tracker.length === 0 ? (
         <Empty icon={<ClipboardList size={22} />} title="Your list is empty" body="Add colleges above, or from any college page or the simulator." action={<Link href="/colleges" className="text-sm font-medium text-brand"><Plus size={14} className="inline" /> Browse colleges</Link>} />
       ) : (

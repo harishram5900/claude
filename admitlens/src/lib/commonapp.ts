@@ -37,8 +37,28 @@ function impactFromText(s: string): ImpactLevel {
   return "school";
 }
 
+/** PDF text has a hard break at every printed line. Rejoin lines into paragraphs: a short
+ *  line ending a sentence closes a paragraph; everything else continues it. */
+function reflow(block: string) {
+  const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
+  if (!lines.length) return "";
+  const full = Math.max(...lines.map((l) => l.length));
+  const paras: string[] = [];
+  let cur = "";
+  for (const l of lines) {
+    cur = cur ? `${cur} ${l}` : l;
+    if (/[.!?"”]$/.test(l) && l.length < full * 0.7) {
+      paras.push(cur);
+      cur = "";
+    }
+  }
+  if (cur) paras.push(cur);
+  return paras.join("\n\n");
+}
+
 export function parseCommonApp(raw: string): ParseResult {
-  const text = raw.replace(/\r/g, "").replace(/[ \t]+/g, " ");
+  // Normalize: unify line endings, collapse spaces, re-join words hyphenated across a line break.
+  const text = raw.replace(/\r/g, "").replace(/[ \t]+/g, " ").replace(/([a-z])-\n([a-z])/g, "$1-$2");
   const flat = text.replace(/\n+/g, " ");
   const found: string[] = [];
   const missing: string[] = [];
@@ -141,7 +161,7 @@ export function parseCommonApp(raw: string): ParseResult {
   for (const chunk of chunks) {
     const end = chunk.search(/(?:Honors title|Personal essay|Writing\b|Additional information)/i);
     const c = end > 0 ? chunk.slice(0, end) : chunk;
-    const category = (c.match(/^\s*([A-Za-z/&,'()\- ]{2,60}?)(?=\s+(?:Position|Organization|Please describe|Participation))/) ?? [])[1]?.trim() ?? "Other";
+    const category = (c.match(/^\s*([A-Za-z/&,'():\- ]{2,60}?)(?=\s+(?:Position|Organization|Please describe|Participation))/) ?? [])[1]?.trim() ?? "Other";
     const role = grab(c, /Position\/leadership description(?: and organization name)?:?\s*(.+?)(?=\s+(?:Organization name|Please describe|Participation))/i) ?? "";
     const org = grab(c, /(?<!and )Organization name:?\s*(.+?)(?=\s+(?:Please describe|Participation))/i) ?? "";
     const desc = grab(c, /Please describe this activity[^:]*:?\s*(.+?)(?=\s+(?:Participation grade levels|Timing of participation|Hours spent))/i) ?? "";
@@ -154,7 +174,7 @@ export function parseCommonApp(raw: string): ParseResult {
     activities.push({
       id: `ca-a-${activities.length}`,
       name: org || role.split(",")[0] || category,
-      role: role.split(",")[0] ?? "",
+      role: role.slice(0, 80),
       category,
       years,
       hoursPerWeek: hours,
@@ -177,7 +197,7 @@ export function parseCommonApp(raw: string): ParseResult {
     // Skip the prompt list if present
     const body = after.replace(/^(?:[\s\S]*?(?:Share an essay on any topic of your choice[^\n]*\n))/i, "");
     const stop = body.search(/\n\s*(?:Disciplinary history|Additional information|Community disruption|Signature|Courses & Grades)/i);
-    const essay = (stop > 0 ? body.slice(0, stop) : body).trim();
+    const essay = reflow((stop > 0 ? body.slice(0, stop) : body).trim());
     if (essay.split(/\s+/).length > 100) {
       profile.personalStatement = essay.slice(0, 6000);
       found.push(`Personal essay (${essay.split(/\s+/).length} words)`);
@@ -186,7 +206,7 @@ export function parseCommonApp(raw: string): ParseResult {
   if (!profile.personalStatement) missing.push("Personal essay");
 
   // Intended major
-  const major = grab(flat, /(?:Academic interests?|Intended major|Career interest):?\s*([A-Z][A-Za-z ,&]{2,60}?)(?=\s+(?:Highest degree|Career|Academic|Future|$))/i);
+  const major = grab(text, /(?:Academic interests?|Intended major|Career interest):?[ \t]*([A-Z][A-Za-z ,&/-]{1,60})[ \t]*(?:\n|$)/i);
   if (major) {
     profile.intendedMajor = major;
     found.push("Intended major");
@@ -205,29 +225,34 @@ export function parseCommonApp(raw: string): ParseResult {
   return { profile, found, missing };
 }
 
-export async function extractPdfText(file: File): Promise<string> {
-  const pdfjs = await import("pdfjs-dist");
-  pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs`;
-  const buf = await file.arrayBuffer();
-  const doc = await pdfjs.getDocument({ data: buf }).promise;
+type PdfJs = typeof import("pdfjs-dist");
+
+/** Rebuilds text lines from a PDF, joining items that share a baseline (label + value rows). */
+export async function pdfToText(pdfjs: Pick<PdfJs, "getDocument">, data: ArrayBuffer | Uint8Array): Promise<string> {
+  const doc = await pdfjs.getDocument({ data: data instanceof Uint8Array ? data : new Uint8Array(data) }).promise;
   const pages: string[] = [];
   for (let i = 1; i <= doc.numPages; i++) {
     const page = await doc.getPage(i);
     const content = await page.getTextContent();
-    let line = "";
-    let lastY: number | null = null;
-    const lines: string[] = [];
+    const rows = new Map<number, { x: number; s: string }[]>();
     for (const item of content.items as { str: string; transform: number[] }[]) {
-      const y = item.transform[5];
-      if (lastY !== null && Math.abs(y - lastY) > 4) {
-        lines.push(line);
-        line = "";
-      }
-      line += (line && !line.endsWith(" ") ? " " : "") + item.str;
-      lastY = y;
+      if (!item.str?.trim()) continue;
+      const y = Math.round(item.transform[5] / 3) * 3; // tolerate tiny baseline jitter
+      const x = item.transform[4];
+      if (!rows.has(y)) rows.set(y, []);
+      rows.get(y)!.push({ x, s: item.str });
     }
-    lines.push(line);
+    const lines = [...rows.entries()]
+      .sort((a, b) => b[0] - a[0])
+      .map(([, parts]) => parts.sort((a, b) => a.x - b.x).map((p) => p.s.trim()).join(" "));
     pages.push(lines.join("\n"));
   }
   return pages.join("\n");
+}
+
+export async function extractPdfText(file: File): Promise<string> {
+  const pdfjs = await import("pdfjs-dist");
+  // Worker is bundled with the app (no third-party CDN at runtime).
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
+  return pdfToText(pdfjs, await file.arrayBuffer());
 }

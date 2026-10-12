@@ -12,7 +12,7 @@ export default function About() {
         <Card className="space-y-3 p-6">
           <h2 className="font-display text-xl font-semibold">Data</h2>
           <p>
-            AdmitLens ships with detailed admissions profiles for {COLLEGES.length} colleges, drawn from each school's most recent Common Data Set and admissions office publications: overall and early admit rates, middle-50% SAT/ACT, typical GPA of admitted students, test policy, cost, early plans, residency preferences, legacy policy, and what the office says it rewards. Any other accredited four-year college is pulled live from the U.S. Department of Education's College Scorecard, where admit rates and test ranges are federal data and GPA is estimated from selectivity.
+            AdmitLens ships with detailed admissions profiles for {COLLEGES.length} colleges, drawn from each school's most recent Common Data Set and admissions office publications: overall and early admit rates, middle-50% SAT/ACT, typical GPA of admitted students, test policy, cost, early plans, residency preferences, legacy policy, and what the office says it rewards. The most-viewed schools (the Ivy League, MIT, Duke and UIUC) carry admit rates checked against their latest reported cycle, with the source linked on each college page. Every college page also shows live outcome and net-price data from the federal College Scorecard. Any other accredited four-year college is pulled live from the U.S. Department of Education's College Scorecard, where admit rates and test ranges are federal data and GPA is estimated from selectivity.
           </p>
         </Card>
         <Card className="space-y-3 p-6">
@@ -44,7 +44,7 @@ export default function About() {
             When the deployment has an Anthropic API key, you can request a full-text read of your activities and essay from Claude, prompted as a reader at your chosen college and given that school's data plus the model's ratings. The numbers always come from the transparent model above; the AI adds qualitative critique.
           </p>
         </Card>
-        <Card className="space-y-3 p-6">
+        <Card id="privacy" className="scroll-mt-24 space-y-3 p-6">
           <h2 className="font-display text-xl font-semibold">Limits and privacy</h2>
           <p>
             This is a simulation. Real decisions depend on institutional needs, the applicant pool each year, intended major, interviews and factors no model can see. Use it to find your biggest levers, not to predict your fate. Your profile, essays and tracker live only in your browser's local storage. Nothing is sent to a server unless you request an AI read or AI-assisted import.

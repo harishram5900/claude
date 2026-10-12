@@ -17,9 +17,9 @@ export function CardHeader({ title, subtitle, action, icon }: { title: ReactNode
   return (
     <div className="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
       <div className="flex min-w-0 items-start gap-3">
-        {icon && <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand">{icon}</div>}
+        {icon && <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-soft text-brand">{icon}</div>}
         <div className="min-w-0">
-          <h3 className="font-semibold tracking-tight">{title}</h3>
+          <h3 className="font-display text-[1.05rem] font-semibold tracking-tight">{title}</h3>
           {subtitle && <p className="mt-0.5 text-sm text-muted">{subtitle}</p>}
         </div>
       </div>
@@ -30,12 +30,12 @@ export function CardHeader({ title, subtitle, action, icon }: { title: ReactNode
 
 type BtnVariant = "primary" | "secondary" | "ghost" | "danger";
 const btn: Record<BtnVariant, string> = {
-  primary: "bg-brand text-white hover:brightness-110 shadow-sm",
+  primary: "bg-brand text-[var(--surface)] shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] hover:brightness-110",
   secondary: "border border-line bg-surface hover:bg-surface-2",
   ghost: "hover:bg-surface-2",
   danger: "text-bad hover:bg-bad-soft",
 };
-const btnBase = "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50";
+const btnBase = "inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50";
 
 export function Button({ variant = "primary", className, ...rest }: ComponentProps<"button"> & { variant?: BtnVariant }) {
   return <button className={cx(btnBase, btn[variant], className)} {...rest} />;
@@ -117,8 +117,8 @@ export function PageHeader({ eyebrow, title, subtitle, action }: { eyebrow?: str
   return (
     <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="max-w-2xl">
-        {eyebrow && <div className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-brand">{eyebrow}</div>}
-        <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h1>
+        {eyebrow && <div className="eyebrow mb-3">{eyebrow}</div>}
+        <h1 className="font-display text-4xl font-medium tracking-tight sm:text-5xl">{title}</h1>
         {subtitle && <p className="mt-2 text-muted">{subtitle}</p>}
       </div>
       {action}

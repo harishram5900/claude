@@ -1,149 +1,259 @@
-import { ArrowRight, ClipboardList, FileUp, GraduationCap, Map, PenLine, ShieldCheck, Trophy } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ClipboardList, FileUp, GraduationCap, Library, Map, PenLine, Trophy } from "lucide-react";
 import Link from "next/link";
 import { ButtonLink, Card, fmtPct } from "@/components/ui";
 import { COLLEGES, getCollege } from "@/data/colleges";
+import { RESOURCES } from "@/data/resources";
 import { SCHOLARSHIPS } from "@/data/scholarships";
 import { evaluate } from "@/lib/engine";
 import { SAMPLE_PROFILE } from "@/lib/sample";
 
 const FEATURES = [
-  { icon: GraduationCap, title: "Admissions simulator", body: "A reader calibrated to the exact college you pick grades every part of your file on a 1–6 scale, estimates your chances and writes the committee memo.", href: "/simulate" },
-  { icon: PenLine, title: "Essay Lab", body: "Live scoring for voice, specificity, structure and reflection. College-specific 'why us' checks. Coaching, never ghostwriting.", href: "/essays" },
-  { icon: Trophy, title: "Scholarship matching", body: `${SCHOLARSHIPS.length} major national and state programs ranked by your grade, GPA, state, major and circumstances.`, href: "/scholarships" },
-  { icon: ClipboardList, title: "College tracker", body: "Every deadline, checklist and decision in one place, with list-balance checks counselors swear by.", href: "/tracker" },
-  { icon: Map, title: "Roadmap", body: "A grade-by-grade map from 9th grade to decision day, built around the gaps your dream school would flag.", href: "/roadmap" },
-  { icon: FileUp, title: "Common App import", body: "Upload your Common App PDF once. Every tool reads from the same profile.", href: "/profile" },
+  { icon: GraduationCap, title: "Admissions simulator", body: "A reader calibrated to the college you choose rates every part of your file from 1 to 6, estimates your odds and explains its reasoning.", href: "/simulate" },
+  { icon: PenLine, title: "Essay Lab", body: "Live feedback on voice, specificity, structure and reflection, plus checks for 'why us' essays that could describe any school.", href: "/essays" },
+  { icon: Map, title: "Roadmap", body: "A grade-by-grade plan to your dream school, prioritized by the gaps its readers would flag.", href: "/roadmap" },
+  { icon: ClipboardList, title: "List builder & tracker", body: "A balanced list of reaches, targets and likely schools, with deadlines and checklists filled in.", href: "/tracker" },
+  { icon: Trophy, title: "Scholarships", body: `${SCHOLARSHIPS.length} national and state programs matched to your grade, GPA, state and story.`, href: "/scholarships" },
+  { icon: Library, title: "Learn from real admits", body: "Essays and blogs by admitted students, published on the colleges' own sites.", href: "/learn" },
 ];
+
+const FAQ = [
+  {
+    q: "How accurate are the chances?",
+    a: "They're estimates from a transparent model, not predictions. Each college is calibrated with its real admit rate, test ranges and typical GPA, and the most-viewed schools are checked against their latest reported cycle. No outside tool can see the rest of the applicant pool or a school's institutional needs, so use AdmitLens to find your biggest levers, not to forecast your fate.",
+  },
+  {
+    q: "Does it connect to my Common App account?",
+    a: "Common App doesn't let outside apps sign in to student accounts. Instead, download your application PDF from Common App's Preview and upload it. AdmitLens reads it in your browser and shows you every field to confirm before saving.",
+  },
+  {
+    q: "Where does my information go?",
+    a: "Your profile, essays and tracker are saved only in your browser on this device. Nothing is sent to a server unless you request an AI read, and AdmitLens has no accounts to breach.",
+  },
+  {
+    q: "Will it write my essays?",
+    a: "No. AdmitLens points out what's working and what isn't, line by line, but the words stay yours. Colleges expect your own writing.",
+  },
+];
+
+function ReaderCard() {
+  const e = evaluate(SAMPLE_PROFILE, getCollege("harvard")!);
+  const tone = (r: number) => (r <= 2 ? "bg-good-soft text-good" : r === 3 ? "bg-brand-soft text-brand" : r === 4 ? "bg-warn-soft text-warn" : "bg-bad-soft text-bad");
+  return (
+    <div className="relative">
+      <div className="absolute -inset-x-6 -bottom-6 top-10 -z-10 rotate-2 rounded-[28px] border border-line bg-surface-2/70" aria-hidden />
+      <Card className="paper overflow-hidden rounded-[24px]">
+        <div className="flex items-center justify-between border-b border-line px-6 py-4">
+          <div>
+            <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">Reader card · simulated</div>
+            <div className="font-display text-lg font-semibold">Harvard College</div>
+          </div>
+          <div className="text-right">
+            <div className="font-display text-3xl font-semibold tabular-nums">{fmtPct(e.chance)}</div>
+            <div className="text-[11px] text-muted">estimated chance</div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-2.5 px-6 py-5 text-sm">
+          {e.dimensions.slice(0, 6).map((d) => (
+            <div key={d.key} className="flex items-center justify-between gap-2">
+              <span className="truncate text-muted">{d.label}</span>
+              <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-md font-display text-sm font-semibold ${tone(d.rating)}`}>{d.rating}</span>
+            </div>
+          ))}
+        </div>
+        <div className="border-t border-line px-6 py-4">
+          <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">Committee note</div>
+          <p className="mt-1 font-display text-[15px] italic leading-snug">{e.committeeLine}</p>
+        </div>
+        <div className="flex items-center justify-between border-t border-line bg-surface-2/60 px-6 py-3 text-xs text-muted">
+          <span>Sample applicant · 3.86 GPA · 1460 SAT</span>
+          <span className="rounded-full border border-accent/50 px-2 py-0.5 font-medium text-accent">{e.category}</span>
+        </div>
+      </Card>
+    </div>
+  );
+}
 
 export default function Home() {
   const demo = ["harvard", "umich", "uiuc", "uic"].map((id) => evaluate(SAMPLE_PROFILE, getCollege(id)!));
+  const verified = COLLEGES.filter((c) => c.verified).length;
   return (
-    <div className="space-y-24">
+    <div className="space-y-28">
       {/* Hero */}
-      <section className="relative -mx-4 -mt-8 overflow-hidden px-4 pb-6 pt-16 sm:-mx-6 sm:-mt-10 sm:px-6 sm:pt-24">
-        <div className="grid-bg absolute inset-0 opacity-60 [mask-image:radial-gradient(70%_60%_at_50%_30%,black,transparent)]" aria-hidden />
-        <div className="glow absolute inset-0" aria-hidden />
-        <div className="relative mx-auto max-w-3xl text-center">
-          <div className="rise mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs text-muted">
-            <span className="h-1.5 w-1.5 rounded-full bg-good" /> Calibrated on published admissions data from {COLLEGES.length} colleges · live data for every US college
+      <section className="relative -mx-4 -mt-8 px-4 pt-14 sm:-mx-6 sm:-mt-10 sm:px-6 sm:pt-20">
+        <div className="grid-bg absolute inset-0 opacity-50 [mask-image:radial-gradient(60%_60%_at_30%_30%,black,transparent)]" aria-hidden />
+        <div className="relative grid items-center gap-14 lg:grid-cols-[1.15fr_1fr]">
+          <div className="rise">
+            <div className="eyebrow">College admissions, read from the other side of the desk</div>
+            <h1 className="mt-6 font-display text-5xl font-medium leading-[1.02] tracking-tight sm:text-7xl">
+              Know how your application <em className="text-brand">reads</em> before anyone else does.
+            </h1>
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
+              A reader at Harvard and a reader at UIC hold your file to different standards. AdmitLens simulates the one at the college you choose: what they'd rate, what they'd question, and what would change their mind.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <ButtonLink href="/profile" className="px-5 py-3 text-[15px]">
+                <FileUp size={17} /> Import your Common App
+              </ButtonLink>
+              <ButtonLink href="/simulate" variant="secondary" className="px-5 py-3 text-[15px]">
+                Try it with a sample student <ArrowRight size={17} />
+              </ButtonLink>
+            </div>
+            <p className="mt-5 text-xs text-muted">Free · no account · your data stays in your browser</p>
           </div>
-          <h1 className="rise font-display text-5xl font-semibold leading-[1.05] tracking-tight sm:text-7xl">
-            See your application <span className="bg-gradient-to-r from-brand to-brand-2 bg-clip-text text-transparent">the way they will.</span>
-          </h1>
-          <p className="rise mx-auto mt-6 max-w-xl text-lg text-muted">
-            A Harvard reader and a UIC reader don't grade the same file the same way. AdmitLens simulates the admissions officer at the college you choose, tells you your odds and shows exactly how to raise them.
-          </p>
-          <div className="rise mt-8 flex flex-wrap justify-center gap-3">
-            <ButtonLink href="/profile" className="px-5 py-3 text-base">
-              <FileUp size={18} /> Import Common App
-            </ButtonLink>
-            <ButtonLink href="/simulate" variant="secondary" className="px-5 py-3 text-base">
-              Try the simulator <ArrowRight size={18} />
-            </ButtonLink>
+          <div className="rise lg:pl-6">
+            <ReaderCard />
           </div>
         </div>
 
-        {/* Live demo */}
-        <div className="relative mx-auto mt-16 max-w-5xl">
-          <div className="mb-3 text-center text-sm text-muted">
-            Same student: <b className="text-ink">3.86 GPA · 1460 SAT · state science medalist · first-gen</b>. Four different readers:
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {demo.map((e) => (
-              <Card key={e.college.id} className="rise p-4">
-                <div className="flex items-center justify-between">
-                  <div className="font-semibold">{e.college.short}</div>
-                  <div className="text-xs text-muted">{(e.college.admitRate * 100).toFixed(e.college.admitRate < 0.1 ? 1 : 0)}% admit</div>
-                </div>
-                <div className="mt-3 flex items-end justify-between">
-                  <div className="font-display text-4xl font-semibold tabular-nums">{fmtPct(e.chance)}</div>
-                  <div className="text-right text-xs">
-                    <div className="text-muted">Academic rating</div>
-                    <div className="font-display text-lg font-semibold">{e.dimensions[0].rating}/6</div>
-                  </div>
-                </div>
-                <div className="mt-3 line-clamp-3 border-t border-line pt-3 text-xs italic text-muted">{e.committeeLine}</div>
-              </Card>
-            ))}
-          </div>
+        {/* Honest proof strip */}
+        <div className="relative mt-20 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-4">
+          {[
+            [String(COLLEGES.length), "colleges profiled in depth", `${verified} checked against their latest reported cycle`],
+            ["6,000+", "colleges searchable live", "U.S. Dept. of Education College Scorecard"],
+            [String(SCHOLARSHIPS.length), "scholarships matched", "national and state programs"],
+            ["0", "accounts or data sold", "everything stays on your device"],
+          ].map(([n, l, s]) => (
+            <div key={l} className="bg-surface px-5 py-5">
+              <div className="font-display text-3xl font-semibold tabular-nums">{n}</div>
+              <div className="mt-1 text-sm">{l}</div>
+              <div className="text-xs text-muted">{s}</div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Features */}
+      {/* Same file, different readers */}
       <section>
-        <div className="mx-auto mb-10 max-w-2xl text-center">
-          <h2 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">Everything between you and the acceptance letter</h2>
-          <p className="mt-3 text-muted">One profile powers every tool, so you never fill out the same information twice.</p>
+        <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          <div className="max-w-xl">
+            <div className="eyebrow">Same file, four readers</div>
+            <h2 className="mt-3 font-display text-4xl font-medium tracking-tight">The bar moves with the college.</h2>
+          </div>
+          <p className="max-w-md text-sm text-muted">
+            One student (3.86 GPA, 1460 SAT, state science medalist, first-generation), read by four offices. The academic rating uses the reader's 1–6 scale, where 1 means exceptional for that pool.
+          </p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((f) => (
-            <Link key={f.title} href={f.href} className="group">
-              <Card className="h-full p-6 transition group-hover:-translate-y-0.5 group-hover:border-brand">
-                <div className="mb-4 grid h-11 w-11 place-items-center rounded-xl bg-brand-soft text-brand">
-                  <f.icon size={20} />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {demo.map((e) => (
+            <Link key={e.college.id} href={`/simulate?college=${e.college.id}`} className="group">
+              <Card className="h-full p-5 transition group-hover:-translate-y-0.5 group-hover:border-brand">
+                <div className="flex items-baseline justify-between">
+                  <div className="font-display text-xl font-semibold">{e.college.short}</div>
+                  <div className="font-mono text-[11px] text-muted">{(e.college.admitRate * 100).toFixed(e.college.admitRate < 0.1 ? 1 : 0)}% admit</div>
                 </div>
-                <h3 className="font-semibold">{f.title}</h3>
-                <p className="mt-1.5 text-sm text-muted">{f.body}</p>
+                <div className="mt-6 flex items-end justify-between">
+                  <div>
+                    <div className="font-display text-5xl font-medium tabular-nums">{fmtPct(e.chance)}</div>
+                    <div className="text-xs text-muted">estimated chance</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-display text-2xl font-semibold">{e.dimensions[0].rating}<span className="text-sm text-muted">/6</span></div>
+                    <div className="text-xs text-muted">academic rating</div>
+                  </div>
+                </div>
+                <div className="rule my-4" />
+                <p className="line-clamp-3 text-xs italic leading-relaxed text-muted">{e.committeeLine}</p>
               </Card>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* How grading differs */}
-      <section className="grid items-center gap-10 lg:grid-cols-2">
+      {/* How it works */}
+      <section className="grid gap-12 lg:grid-cols-[1fr_1.4fr]">
         <div>
-          <h2 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">Graded by the standard that actually applies to you</h2>
-          <p className="mt-4 text-muted">
-            Every college in AdmitLens carries its own admit rate, middle-50% test scores, typical GPA, test policy, early-round advantage, residency preferences and stated priorities. The reader's harshness, the weight on essays versus grades and the ceiling on anyone's odds all shift with the school.
-          </p>
-          <ul className="mt-6 space-y-3 text-sm">
-            {[
-              "1–6 reader ratings, the scale highly selective offices use internally",
-              "What-if simulation: every suggestion is re-scored to show the real gain",
-              "Deterministic and tested: no two different files get the same read",
-              "Optional AI deep read in the voice of a reader at your chosen school",
-            ].map((t) => (
-              <li key={t} className="flex gap-2">
-                <ShieldCheck size={18} className="shrink-0 text-good" /> {t}
-              </li>
-            ))}
-          </ul>
-          <ButtonLink href="/about" variant="secondary" className="mt-6">
-            How the model works
-          </ButtonLink>
+          <div className="eyebrow">How it works</div>
+          <h2 className="mt-3 font-display text-4xl font-medium tracking-tight">Three steps, about five minutes.</h2>
+          <p className="mt-4 text-muted">One profile powers every tool, so you never type the same thing twice.</p>
         </div>
-        <Card className="p-6">
-          <div className="mb-4 text-sm font-medium">Academic rating for the same 3.86 / 1460 transcript</div>
-          <div className="space-y-3">
-            {["harvard", "stanford", "umich", "uiuc", "purdue", "uic"].map((id) => {
-              const e = evaluate(SAMPLE_PROFILE, getCollege(id)!);
-              const r = e.dimensions[0].rating;
-              return (
-                <div key={id} className="flex items-center gap-3">
-                  <div className="w-24 text-sm">{e.college.short}</div>
-                  <div className="flex flex-1 gap-1">
-                    {[1, 2, 3, 4, 5, 6].map((n) => (
-                      <div key={n} className={`h-6 flex-1 rounded ${n === r ? (r <= 2 ? "bg-good" : r === 3 ? "bg-brand" : "bg-bad") : "bg-surface-2"}`} />
-                    ))}
-                  </div>
-                  <div className="w-10 text-right font-display font-semibold">{r}</div>
-                </div>
-              );
-            })}
-          </div>
-          <div className="mt-3 flex justify-between text-xs text-muted">
-            <span>1 · exceptional</span>
-            <span>6 · not competitive</span>
-          </div>
-        </Card>
+        <ol className="space-y-px overflow-hidden rounded-2xl border border-line bg-line">
+          {[
+            ["Bring your application", "Upload the PDF from Common App's Preview, or fill in the profile. You review every imported field before it's saved."],
+            ["Pick your dream school", "A reader calibrated to that school's admit rate, score ranges and stated priorities rates your file and writes the committee memo."],
+            ["Follow the plan", "Every suggestion is re-scored to show its real effect on your odds, then laid out on a grade-by-grade roadmap with a balanced college list."],
+          ].map(([t, b], i) => (
+            <li key={t} className="flex gap-5 bg-surface p-6">
+              <span className="font-mono text-sm text-accent">0{i + 1}</span>
+              <div>
+                <div className="font-display text-lg font-semibold">{t}</div>
+                <p className="mt-1 text-sm text-muted">{b}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
       </section>
 
-      <section className="rounded-3xl border border-line bg-surface p-10 text-center shadow-card">
-        <h2 className="font-display text-3xl font-semibold tracking-tight">Your dream school is a plan, not a lottery ticket.</h2>
-        <p className="mx-auto mt-3 max-w-xl text-muted">Start with your profile. It takes five minutes, or thirty seconds with a Common App PDF.</p>
-        <ButtonLink href="/profile" className="mt-6 px-6 py-3 text-base">
-          Build my profile <ArrowRight size={18} />
+      {/* Features */}
+      <section>
+        <div className="mb-8 max-w-xl">
+          <div className="eyebrow">Everything in one place</div>
+          <h2 className="mt-3 font-display text-4xl font-medium tracking-tight">From freshman year to decision day.</h2>
+        </div>
+        <div className="grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map((f) => (
+            <Link key={f.title} href={f.href} className="group bg-surface p-7 transition hover:bg-surface-2/60">
+              <f.icon size={20} className="text-brand" />
+              <h3 className="mt-5 flex items-center gap-1 font-display text-xl font-semibold">
+                {f.title} <ArrowUpRight size={16} className="text-muted opacity-0 transition group-hover:opacity-100" />
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted">{f.body}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Real admits */}
+      <section className="grid gap-10 lg:grid-cols-[1fr_1.4fr]">
+        <div>
+          <div className="eyebrow">From students who got in</div>
+          <h2 className="mt-3 font-display text-4xl font-medium tracking-tight">Read the real thing.</h2>
+          <p className="mt-4 text-muted">
+            Colleges publish essays from admitted students and run blogs written by current undergrads. We collect the official ones in one place and link to the original pages.
+          </p>
+          <ButtonLink href="/learn" variant="secondary" className="mt-6">
+            Browse all resources <ArrowRight size={16} />
+          </ButtonLink>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {RESOURCES.filter((r) => r.kind === "Essays that worked" || r.kind === "Student blogs").slice(0, 4).map((r) => (
+            <a key={r.url} href={r.url} target="_blank" rel="noreferrer" className="group">
+              <Card className="h-full p-5 transition group-hover:border-brand">
+                <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.14em] text-muted">
+                  <span>{r.kind}</span>
+                  <ArrowUpRight size={14} className="transition group-hover:text-brand" />
+                </div>
+                <div className="mt-3 font-display text-lg font-semibold leading-snug">{r.title}</div>
+                <div className="text-sm text-brand">{r.publisher}</div>
+                <p className="mt-2 line-clamp-3 text-sm text-muted">{r.takeaway}</p>
+              </Card>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="mx-auto max-w-3xl">
+        <div className="eyebrow">Straight answers</div>
+        <h2 className="mt-3 font-display text-4xl font-medium tracking-tight">Questions students ask first</h2>
+        <div className="mt-8 divide-y divide-line border-y border-line">
+          {FAQ.map((f) => (
+            <details key={f.q} className="group py-5">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-display text-lg font-semibold">
+                {f.q}
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-line text-muted transition group-open:rotate-45">+</span>
+              </summary>
+              <p className="mt-3 text-[15px] leading-relaxed text-muted">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <section className="paper relative overflow-hidden rounded-[28px] border border-line px-8 py-16 text-center shadow-card">
+        <div className="eyebrow">Start here</div>
+        <h2 className="mx-auto mt-4 max-w-2xl font-display text-4xl font-medium tracking-tight sm:text-5xl">Your dream school is a plan, not a lottery ticket.</h2>
+        <p className="mx-auto mt-4 max-w-xl text-muted">Five minutes to build your profile, or thirty seconds with your Common App PDF.</p>
+        <ButtonLink href="/profile" className="mt-8 px-6 py-3 text-[15px]">
+          Build my profile <ArrowRight size={17} />
         </ButtonLink>
       </section>
     </div>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CollegePicker } from "@/components/CollegePicker";
 import { Badge, ButtonLink, Card, cx, fmtPct, PageHeader, Progress } from "@/components/ui";
-import { chanceOnly } from "@/lib/engine";
+import { evaluate } from "@/lib/engine";
 import { buildRoadmap, currentPhase, PHASES, type Track } from "@/lib/roadmap";
 import { useStore } from "@/lib/store";
 import { useCollege } from "@/lib/useCollege";
@@ -25,7 +25,8 @@ export default function RoadmapPage() {
   const [filter, setFilter] = useState<Track | "All" | "Priority">("All");
   const now = currentPhase(profile.grade);
   const items = useMemo(() => buildRoadmap(profile, college), [profile, college]);
-  const chance = college ? chanceOnly(profile, college) : null;
+  const ev = useMemo(() => (college ? evaluate(profile, college) : null), [profile, college]);
+  const chance = ev?.chance ?? null;
   if (!ready) return null;
 
   const shown = items.filter((m) => filter === "All" || (filter === "Priority" ? m.priority : m.track === filter));
@@ -70,6 +71,29 @@ export default function RoadmapPage() {
           {!college && <p className="mt-3 text-sm text-muted">Choose a dream college to personalize every milestone.</p>}
         </Card>
       </div>
+
+      {college && ev && ev.improvements.length > 0 && (
+        <Card className="mb-10 overflow-hidden">
+          <div className="border-b border-line px-6 py-4">
+            <div className="eyebrow">Game plan</div>
+            <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight">Your three biggest levers for {college.short}</h2>
+            <p className="text-sm text-muted">Each is re-simulated against {college.short}'s reader, so the gains reflect this school's priorities.</p>
+          </div>
+          <div className="grid gap-px bg-line md:grid-cols-3">
+            {ev.improvements.slice(0, 3).map((im, i) => (
+              <div key={im.title} className="bg-surface p-6">
+                <div className="flex items-baseline justify-between">
+                  <span className="font-mono text-xs text-accent">0{i + 1}</span>
+                  <span className="font-display text-lg font-semibold text-good">+{im.gain.toFixed(1)} pts</span>
+                </div>
+                <div className="mt-2 font-medium">{im.title}</div>
+                <p className="mt-1 text-sm text-muted">{im.detail}</p>
+                <Badge tone="neutral" className="mt-3">{im.effort}</Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* The map */}
       <div className="relative">

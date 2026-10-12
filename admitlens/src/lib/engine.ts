@@ -79,7 +79,9 @@ export function bestSat(p: Profile): number | null {
 
 export function unweightedGpa(p: Profile): number | null {
   if (p.gpaUnweighted != null) return clamp(p.gpaUnweighted, 0, 4);
-  if (p.gpaWeighted != null) return clamp(p.gpaWeighted - 0.35, 0, 4);
+  // Only a weighted GPA: estimate conservatively. Above 4.0 it is a 5-point-style scale where
+  // honors/AP add up to a full point, so scale it down rather than capping at 4.0.
+  if (p.gpaWeighted != null) return clamp(p.gpaWeighted <= 4 ? p.gpaWeighted - 0.15 : p.gpaWeighted * 0.875, 0, 4);
   return null;
 }
 
@@ -354,7 +356,9 @@ function core(p: Profile, c: College, plan: AppPlan): Core {
   const dims: DimensionResult[] = [];
   const add = (key: DimensionResult["key"], label: string, z: number, note: string) =>
     dims.push({ key, label, z: Math.round(z * 100) / 100, rating: ratingFromZ(z), grade: gradeFromZ(z), note });
-  add("academics", "GPA & class standing", zGpa, gpa == null ? "No GPA provided" : `${gpa.toFixed(2)} UW vs. ~${c.gpa.toFixed(2)} typical admit`);
+  const gpaEstimated = p.gpaUnweighted == null && p.gpaWeighted != null;
+  if (gpaEstimated) flags.push(`Unweighted GPA estimated as ${gpa!.toFixed(2)} from your ${p.gpaWeighted!.toFixed(2)} weighted GPA. Add your unweighted GPA in your profile for an exact read.`);
+  add("academics", "GPA & class standing", zGpa, gpa == null ? "No GPA provided" : `${gpa.toFixed(2)} UW${gpaEstimated ? " (est.)" : ""} vs. ~${c.gpa.toFixed(2)} typical admit`);
   add("rigor", "Course rigor", zRigor, `${p.apCount} AP/IB/dual-enrollment, rigor ${p.rigor}/5`);
   if (c.testPolicy !== "blind")
     add("testing", "Testing", testW ? zTest : 0, sat && p.submitTests ? `${sat} SAT-equivalent vs. ${satRange[0]}–${satRange[1]} middle 50%` : c.testPolicy === "required" ? "Missing (required)" : "Not submitted (optional)");
@@ -526,7 +530,7 @@ function writeMemo(p: Profile, c: College, tier: Tier, k: Core, rel: number) {
   if (d.essays.z >= 0.5) pitchPieces.push("a memorable voice");
   let committeeLine: string;
   if (rel >= 0.5) committeeLine = `"${name}: ${pitchPieces.join(", ") || "consistently strong file"}. I'd advocate."`;
-  else if (rel >= 0.2) committeeLine = `"${name}: ${pitchPieces.join(", ") || "qualified"}, but ${concerns[0]?.toLowerCase().replace(/\.$/, "") || "not yet distinctive in this pool"}. Hold for the committee."`;
+  else if (rel >= 0.2) committeeLine = `"${name}: ${pitchPieces.join(", ") || "qualified"}, but ${concerns[0] ? concerns[0].charAt(0).toLowerCase() + concerns[0].slice(1).replace(/\.$/, "") : "not yet distinctive in this pool"}. Hold for the committee."`;
   else committeeLine = `"${name}: ${concerns[0]?.replace(/\.$/, "") || `not competitive in this year's ${c.short} pool`}. Recommend deny unless something changes."`;
 
   return { memo, strengths, concerns, committeeLine };

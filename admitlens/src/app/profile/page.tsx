@@ -1,132 +1,15 @@
 "use client";
-import { Award as AwardIcon, BookOpen, Check, FileUp, Loader2, Plus, RotateCcw, Sparkles, Trash2, Upload, UserRound, Users } from "lucide-react";
-import { useRef, useState } from "react";
+import { Award as AwardIcon, BookOpen, Plus, RotateCcw, Sparkles, Trash2, UserRound, Users } from "lucide-react";
 import { Badge, Button, Card, CardHeader, cx, Field, inputCls, PageHeader, Progress } from "@/components/ui";
 import { CollegePicker } from "@/components/CollegePicker";
 import { getCollege } from "@/data/colleges";
-import { extractPdfText, parseCommonApp } from "@/lib/commonapp";
+import { CommonAppImport } from "@/components/CommonAppImport";
 import { SAMPLE_PROFILE } from "@/lib/sample";
 import { useStore } from "@/lib/store";
 import { STATES, type Activity, type Award, type Profile } from "@/lib/types";
-import { useAiStatus } from "@/lib/useCollege";
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 const numOrNull = (v: string) => (v.trim() === "" ? null : Number(v));
-
-function CommonAppImport({ onMerge }: { onMerge: (p: Partial<Profile>, found: string[], missing: string[]) => void }) {
-  const ai = useAiStatus();
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [paste, setPaste] = useState("");
-  const [err, setErr] = useState<string | null>(null);
-  const [useAi, setUseAi] = useState(true);
-
-  const run = async (text: string) => {
-    setErr(null);
-    if (ai && useAi) {
-      setBusy("Reading your application with AI…");
-      try {
-        const res = await fetch("/api/ai/parse", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
-        const d = await res.json();
-        if (!res.ok) throw new Error(d.error);
-        const now = new Date();
-        const seniorYear = now.getMonth() >= 6 ? now.getFullYear() + 1 : now.getFullYear();
-        const p: Partial<Profile> = {
-          importedFrom: "Common App (AI)",
-          name: d.name || undefined,
-          state: d.state || undefined,
-          highSchool: d.highSchool || undefined,
-          intendedMajor: d.intendedMajor || undefined,
-          grade: d.graduationYear ? Math.max(9, Math.min(12, 12 - (d.graduationYear - seniorYear))) : undefined,
-          gpaUnweighted: d.gpaUnweighted,
-          gpaWeighted: d.gpaWeighted,
-          classRankPercent: d.classRankPercent,
-          apCount: d.apCount || undefined,
-          sat: d.sat,
-          act: d.act,
-          activities: d.activities?.map((a: Omit<Activity, "id">) => ({ ...a, id: uid() })),
-          awards: d.awards?.map((a: Omit<Award, "id">) => ({ ...a, id: uid() })),
-          personalStatement: d.personalStatement || undefined,
-          firstGen: d.firstGen || undefined,
-          lowIncome: d.feeWaiver || undefined,
-        };
-        Object.keys(p).forEach((k) => (p as Record<string, unknown>)[k] === undefined && delete (p as Record<string, unknown>)[k]);
-        const found = Object.keys(p).filter((k) => k !== "importedFrom");
-        onMerge(p, found, []);
-        setBusy(null);
-        return;
-      } catch (e) {
-        setErr(`AI parsing failed (${e instanceof Error ? e.message : "error"}). Used the built-in parser instead.`);
-      }
-    }
-    const r = parseCommonApp(text);
-    onMerge(r.profile, r.found, r.missing);
-    setBusy(null);
-  };
-
-  const onFile = async (f: File) => {
-    setBusy("Extracting text from PDF…");
-    try {
-      const text = await extractPdfText(f);
-      await run(text);
-    } catch {
-      setErr("Couldn't read that PDF. Try the paste option instead.");
-      setBusy(null);
-    }
-  };
-
-  return (
-    <Card className="overflow-hidden">
-      <div className="glow">
-        <CardHeader
-          title="Import from Common App"
-          subtitle="Bring in your whole application at once instead of retyping it."
-          icon={<FileUp size={16} />}
-        />
-        <div className="grid gap-5 p-5 md:grid-cols-2">
-          <div>
-            <ol className="mb-4 space-y-1.5 text-sm text-muted">
-              <li>1. In Common App, open <b className="text-ink">My Colleges → any college → Review and submit</b>.</li>
-              <li>2. Click <b className="text-ink">Preview</b> and download the PDF.</li>
-              <li>3. Drop it here. It's parsed in your browser and saved only on this device.</li>
-            </ol>
-            <div
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => {
-                e.preventDefault();
-                const f = e.dataTransfer.files[0];
-                if (f) onFile(f);
-              }}
-              onClick={() => fileRef.current?.click()}
-              className="grid cursor-pointer place-items-center rounded-xl border-2 border-dashed border-line bg-surface/60 px-4 py-8 text-center transition hover:border-brand"
-            >
-              {busy ? <Loader2 className="animate-spin text-brand" /> : <Upload className="text-brand" />}
-              <div className="mt-2 text-sm font-medium">{busy ?? "Drop your Common App PDF or click to upload"}</div>
-              <input ref={fileRef} type="file" accept="application/pdf" className="hidden" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
-            </div>
-            {ai && (
-              <label className="mt-3 flex items-center gap-2 text-sm text-muted">
-                <input type="checkbox" checked={useAi} onChange={(e) => setUseAi(e.target.checked)} className="accent-[var(--brand)]" />
-                Use AI for more accurate parsing (sends the text to the AdmitLens server)
-              </label>
-            )}
-          </div>
-          <div className="flex flex-col">
-            <div className="mb-1.5 text-sm font-medium">…or paste application text</div>
-            <textarea className={cx(inputCls, "min-h-36 flex-1 font-mono text-xs")} placeholder="Paste text copied from your Common App preview…" value={paste} onChange={(e) => setPaste(e.target.value)} />
-            <Button variant="secondary" className="mt-2 self-start" disabled={paste.length < 100 || !!busy} onClick={() => run(paste)}>
-              Parse text
-            </Button>
-          </div>
-        </div>
-        {err && <div className="border-t border-line px-5 py-3 text-sm text-warn">{err}</div>}
-        <div className="border-t border-line px-5 py-3 text-xs text-muted">
-          Common App doesn't offer a public API that lets outside apps read your application, so AdmitLens imports the PDF you export yourself. Always double-check imported fields below.
-        </div>
-      </div>
-    </Card>
-  );
-}
 
 function ActivityRow({ a, onChange, onRemove, index }: { a: Activity; onChange: (a: Activity) => void; onRemove: () => void; index: number }) {
   const set = <K extends keyof Activity>(k: K, v: Activity[K]) => onChange({ ...a, [k]: v });
@@ -183,7 +66,6 @@ function ActivityRow({ a, onChange, onRemove, index }: { a: Activity; onChange: 
 
 export default function ProfilePage() {
   const { profile: p, setProfile, profileComplete, ready, resetAll } = useStore();
-  const [importMsg, setImportMsg] = useState<{ found: string[]; missing: string[] } | null>(null);
   if (!ready) return null;
   const set = <K extends keyof Profile>(k: K, v: Profile[K]) => setProfile((prev) => ({ ...prev, [k]: v }));
   const words = p.personalStatement.trim() ? p.personalStatement.trim().split(/\s+/).length : 0;
@@ -207,27 +89,7 @@ export default function ProfilePage() {
       />
 
       <div className="space-y-6">
-        <CommonAppImport
-          onMerge={(partial, found, missing) => {
-            setProfile((prev) => ({ ...prev, ...partial }));
-            setImportMsg({ found, missing });
-          }}
-        />
-        {importMsg && (
-          <Card className="p-5">
-            <div className="flex flex-wrap items-center gap-2 text-sm">
-              <Check size={16} className="text-good" />
-              <span className="font-medium">Imported:</span>
-              {importMsg.found.length ? importMsg.found.map((f) => <Badge key={f} tone="good">{f}</Badge>) : <span className="text-muted">nothing recognized</span>}
-            </div>
-            {importMsg.missing.length > 0 && (
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-                <span className="text-muted">Not found, add manually:</span>
-                {importMsg.missing.map((f) => <Badge key={f} tone="warn">{f}</Badge>)}
-              </div>
-            )}
-          </Card>
-        )}
+        <CommonAppImport onApply={(partial) => setProfile((prev) => ({ ...prev, ...partial }))} />
 
         <Card>
           <CardHeader title="Basics" icon={<UserRound size={16} />} />

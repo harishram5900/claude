@@ -2,6 +2,7 @@
 import { ArrowLeft, CalendarDays, ExternalLink, GraduationCap, Heart, Plus, Sparkles, Target } from "lucide-react";
 import Link from "next/link";
 import { use } from "react";
+import { OfficialData } from "@/components/OfficialData";
 import { Badge, Button, ButtonLink, Card, CardHeader, categoryTone, fmtPct, Gauge, Stat } from "@/components/ui";
 import { collegeSatRange, evaluate, TIER_INFO } from "@/lib/engine";
 import { guessDeadline } from "@/lib/deadline";
@@ -71,12 +72,28 @@ export default function CollegeDetail({ params }: { params: Promise<{ id: string
       </Card>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <Stat label="Admit rate" value={`${(college.admitRate * 100).toFixed(college.admitRate < 0.1 ? 1 : 0)}%`} sub={college.earlyRate ? `Early: ${(college.earlyRate * 100).toFixed(1)}%` : undefined} />
+        <Stat label="Admit rate" value={`${(college.admitRate * 100).toFixed(college.admitRate < 0.1 ? 1 : 0)}%`} sub={college.earlyRate ? `Early: ${(college.earlyRate * 100).toFixed(1)}%${college.verified?.earlyFrom ? ` (${college.verified.earlyFrom})` : ""}` : undefined} />
         <Stat label="SAT middle 50%" value={college.testPolicy === "blind" ? "Test blind" : `${sat[0]}–${sat[1]}`} sub={college.sat ? "Published" : college.testPolicy === "blind" ? "Not considered" : "Estimated"} />
         <Stat label="ACT middle 50%" value={college.act ? `${college.act[0]}–${college.act[1]}` : "—"} />
         <Stat label="Typical GPA (UW)" value={college.gpa.toFixed(2)} sub={college.source === "scorecard" ? "Estimated" : "From CDS"} />
         <Stat label="Sticker cost / yr" value={fmtMoney(college.coa)} sub="Before aid" />
       </div>
+
+      {college.verified ? (
+        <p className="-mt-2 text-xs text-muted">
+          Admit rate verified for the {college.verified.cycle}: {college.verified.detail}.{" "}
+          <a href={college.verified.url} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-ink">
+            Source: {college.verified.source}
+          </a>
+          . Score ranges and GPA are from the latest Common Data Set.
+        </p>
+      ) : (
+        <p className="-mt-2 text-xs text-muted">
+          {college.source === "scorecard" ? "Admissions figures from the U.S. Department of Education College Scorecard. GPA is estimated from selectivity." : "Figures from the college's most recent Common Data Set and admissions office reports. They change every cycle, so confirm on the official site."}
+        </p>
+      )}
+
+      <OfficialData college={college} />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card>

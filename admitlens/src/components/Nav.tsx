@@ -1,5 +1,5 @@
 "use client";
-import { BookOpenCheck, Building2, ClipboardList, Gauge, GraduationCap, Map, Menu, PenLine, Trophy, User, X } from "lucide-react";
+import { BookOpenCheck, Building2, Library, ClipboardList, Gauge, GraduationCap, Map, Menu, PenLine, Trophy, User, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -16,6 +16,7 @@ export const NAV = [
   { href: "/scholarships", label: "Scholarships", icon: Trophy },
   { href: "/tracker", label: "Tracker", icon: ClipboardList },
   { href: "/roadmap", label: "Roadmap", icon: Map },
+  { href: "/learn", label: "Learn", icon: Library },
 ];
 
 export function Nav() {
@@ -29,15 +30,15 @@ export function Nav() {
         <Link href="/" aria-label="AdmitLens home" className="shrink-0">
           <Logo />
         </Link>
-        <nav className="ml-4 hidden items-center gap-1 lg:flex">
+        <nav className="ml-6 hidden items-center gap-0.5 xl:flex">
           {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className={cx("rounded-lg px-3 py-2 text-sm transition", path.startsWith(n.href) ? "bg-brand-soft font-medium text-brand" : "text-muted hover:text-ink")}>
+            <Link key={n.href} href={n.href} className={cx("relative rounded-full px-3 py-1.5 text-sm transition", path.startsWith(n.href) ? "bg-brand-soft font-medium text-brand" : "text-muted hover:text-ink")}>
               {n.label}
             </Link>
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-2">
-          <Link href="/profile" className={cx("hidden items-center gap-2 rounded-xl border border-line bg-surface px-3 py-1.5 text-sm transition hover:bg-surface-2 sm:flex", path === "/profile" && "border-brand")}>
+          <Link href="/profile" className={cx("hidden items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-sm transition hover:bg-surface-2 sm:flex", path === "/profile" && "border-brand")}>
             <User size={15} />
             <span>Profile</span>
             {ready && (
@@ -45,13 +46,13 @@ export function Nav() {
             )}
           </Link>
           <ThemeToggle />
-          <button className="grid h-9 w-9 place-items-center rounded-xl border border-line bg-surface lg:hidden" onClick={() => setOpen((o) => !o)} aria-label="Menu" aria-expanded={open}>
+          <button className="grid h-9 w-9 place-items-center rounded-full border border-line bg-surface xl:hidden" onClick={() => setOpen((o) => !o)} aria-label="Menu" aria-expanded={open}>
             {open ? <X size={16} /> : <Menu size={16} />}
           </button>
         </div>
       </div>
       {open && (
-        <nav className="border-t border-line bg-bg px-4 py-3 lg:hidden">
+        <nav className="border-t border-line bg-bg px-4 py-3 xl:hidden">
           <div className="grid grid-cols-2 gap-2">
             {[...NAV, { href: "/profile", label: "Profile", icon: User }, { href: "/about", label: "How it works", icon: BookOpenCheck }].map((n) => (
               <Link key={n.href} href={n.href} className={cx("flex items-center gap-2 rounded-xl border border-line px-3 py-2.5 text-sm", path.startsWith(n.href) ? "border-brand bg-brand-soft text-brand" : "bg-surface")}>

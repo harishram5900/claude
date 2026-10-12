@@ -39,7 +39,7 @@ export function ThemeToggle() {
   };
   const Icon = mode === "light" ? Sun : mode === "dark" ? Moon : Monitor;
   return (
-    <button onClick={next} className="grid h-9 w-9 place-items-center rounded-xl border border-line bg-surface text-muted transition hover:text-ink" aria-label={`Theme: ${mode}. Click to change`} title={`Theme: ${mode}`}>
+    <button onClick={next} className="grid h-9 w-9 place-items-center rounded-full border border-line bg-surface text-muted transition hover:text-ink" aria-label={`Theme: ${mode}. Click to change`} title={`Theme: ${mode}`}>
       <Icon size={16} />
     </button>
   );

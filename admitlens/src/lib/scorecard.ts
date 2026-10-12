@@ -19,7 +19,63 @@ export const SC_FIELDS = [
   "latest.admissions.test_requirements",
   "latest.student.size",
   "latest.cost.attendance.academic_year",
+  "latest.cost.avg_net_price.overall",
+  "latest.cost.net_price.public.by_income_level.0-30000",
+  "latest.cost.net_price.private.by_income_level.0-30000",
+  "latest.cost.net_price.public.by_income_level.75001-110000",
+  "latest.cost.net_price.private.by_income_level.75001-110000",
+  "latest.completion.consumer_rate",
+  "latest.student.retention_rate.four_year.full_time",
+  "latest.earnings.10_yrs_after_entry.median",
+  "latest.aid.pell_grant_rate",
+  "latest.aid.median_debt.completers.overall",
 ].join(",");
+
+/** Outcome and affordability figures published by the U.S. Department of Education. */
+export interface OfficialStats {
+  unitId: number;
+  name: string;
+  admitRate: number | null;
+  sat: [number, number] | null;
+  act: [number, number] | null;
+  enrollment: number | null;
+  costOfAttendance: number | null;
+  avgNetPrice: number | null;
+  netPriceLowIncome: number | null; // family income $0–30k
+  netPriceMiddleIncome: number | null; // $75k–110k
+  gradRate: number | null;
+  retention: number | null;
+  medianEarnings10yr: number | null;
+  pellRate: number | null;
+  medianDebt: number | null;
+}
+
+export function officialStats(r: Record<string, unknown>): OfficialStats {
+  const pub = n(r["school.ownership"]) === 1;
+  const r25 = n(r["latest.admissions.sat_scores.25th_percentile.critical_reading"]);
+  const m25 = n(r["latest.admissions.sat_scores.25th_percentile.math"]);
+  const r75 = n(r["latest.admissions.sat_scores.75th_percentile.critical_reading"]);
+  const m75 = n(r["latest.admissions.sat_scores.75th_percentile.math"]);
+  const a25 = n(r["latest.admissions.act_scores.25th_percentile.cumulative"]);
+  const a75 = n(r["latest.admissions.act_scores.75th_percentile.cumulative"]);
+  return {
+    unitId: Number(r.id),
+    name: String(r["school.name"] ?? ""),
+    admitRate: n(r["latest.admissions.admission_rate.overall"]),
+    sat: r25 && m25 && r75 && m75 ? [r25 + m25, r75 + m75] : null,
+    act: a25 && a75 ? [a25, a75] : null,
+    enrollment: n(r["latest.student.size"]),
+    costOfAttendance: n(r["latest.cost.attendance.academic_year"]),
+    avgNetPrice: n(r["latest.cost.avg_net_price.overall"]),
+    netPriceLowIncome: n(r[`latest.cost.net_price.${pub ? "public" : "private"}.by_income_level.0-30000`]),
+    netPriceMiddleIncome: n(r[`latest.cost.net_price.${pub ? "public" : "private"}.by_income_level.75001-110000`]),
+    gradRate: n(r["latest.completion.consumer_rate"]),
+    retention: n(r["latest.student.retention_rate.four_year.full_time"]),
+    medianEarnings10yr: n(r["latest.earnings.10_yrs_after_entry.median"]),
+    pellRate: n(r["latest.aid.pell_grant_rate"]),
+    medianDebt: n(r["latest.aid.median_debt.completers.overall"]),
+  };
+}
 
 type Rec = Record<string, unknown>;
 const n = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);

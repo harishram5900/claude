@@ -2,7 +2,7 @@
 import { AlertCircle, CheckCircle2, FilePlus2, Lightbulb, Loader2, PenLine, Sparkles, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { CollegePicker } from "@/components/CollegePicker";
-import { Badge, Button, Card, CardHeader, cx, inputCls, PageHeader, Progress } from "@/components/ui";
+import { Badge, Button, Card, cx, inputCls, PageHeader, Progress } from "@/components/ui";
 import { analyzeEssay, COMMON_APP_PROMPTS } from "@/lib/essay";
 import { tierOf, TIER_INFO } from "@/lib/engine";
 import { useStore } from "@/lib/store";

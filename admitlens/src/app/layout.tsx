@@ -15,8 +15,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f6fb" },
-    { media: "(prefers-color-scheme: dark)", color: "#090a12" },
+    { media: "(prefers-color-scheme: light)", color: "#f5f2ea" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0f0d" },
   ],
 };
 
@@ -28,21 +28,43 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,400..700,30;1,9..144,400..700,30&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-screen">
         <StoreProvider>
           <Nav />
           <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">{children}</main>
-          <footer className="border-t border-line">
-            <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
-              <div className="flex items-center gap-2">
-                <LogoMark size={22} />
-                <span>AdmitLens is a simulation. It is not affiliated with any college or with Common App. Always verify on official sites.</span>
+          <footer className="mt-16 border-t border-line">
+            <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+              <div>
+                <div className="flex items-center gap-2">
+                  <LogoMark size={26} />
+                  <span className="font-display text-lg font-semibold">AdmitLens</span>
+                </div>
+                <p className="mt-3 max-w-xs text-sm text-muted">
+                  A simulation of how admissions offices read applications, built on published college data. Not affiliated with any college or with Common App.
+                </p>
               </div>
-              <div className="flex gap-4">
-                <Link href="/about" className="hover:text-ink">How it works</Link>
-                <Link href="/profile" className="hover:text-ink">Your data</Link>
+              {[
+                ["Plan", [["Simulator", "/simulate"], ["Roadmap", "/roadmap"], ["Tracker", "/tracker"]]],
+                ["Write & fund", [["Essay Lab", "/essays"], ["Scholarships", "/scholarships"], ["Learn from real admits", "/learn"]]],
+                ["About", [["How it works", "/about"], ["Your data & privacy", "/about#privacy"], ["Colleges", "/colleges"]]],
+              ].map(([h, links]) => (
+                <div key={h as string}>
+                  <div className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">{h as string}</div>
+                  <ul className="mt-3 space-y-2 text-sm">
+                    {(links as string[][]).map(([l, href]) => (
+                      <li key={href}>
+                        <Link href={href} className="hover:text-brand">{l}</Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <div className="border-t border-line">
+              <div className="mx-auto max-w-7xl px-4 py-5 text-xs text-muted sm:px-6">
+                Data: U.S. Department of Education College Scorecard, college Common Data Sets and admissions office reports. Figures change every cycle. Confirm on each college's official site.
               </div>
             </div>
           </footer>
