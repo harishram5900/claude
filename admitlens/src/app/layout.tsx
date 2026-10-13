@@ -8,7 +8,7 @@ import { StoreProvider } from "@/lib/store";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "AdmitLens: see your application the way admissions does", template: "%s · AdmitLens" },
+  title: { default: "AdmitLens: your first read shouldn’t be the real one", template: "%s · AdmitLens" },
   description:
     "See how admissions officers at the college you choose would read your application: ratings, chances, a full committee evaluation, essay feedback, scholarships you qualify for, a college tracker and a roadmap to your dream school.",
   icons: { icon: "/icon.svg" },

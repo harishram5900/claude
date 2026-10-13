@@ -64,12 +64,12 @@ export default function Home() {
       <section className="relative px-4 pb-16 pt-32 sm:px-6 sm:pt-40">
         <div className="grid-bg absolute inset-0 opacity-50 [mask-image:radial-gradient(60%_55%_at_50%_25%,black,transparent)]" aria-hidden />
         <Reveal className="relative mx-auto max-w-4xl text-center">
-          <div className="eyebrow">College admissions, read from the other side of the desk</div>
+          <div className="eyebrow">Admissions reads and scholarships</div>
           <h1 className="font-display mt-6 text-5xl font-medium leading-[1.02] tracking-tight sm:text-7xl">
-            Know how your application <em className="text-brand">reads</em> before anyone else does.
+            Your first read shouldn’t be the <em className="text-brand">real</em> one.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted">
-            A reader at Harvard and a reader at UIC hold your file to different standards. AdmitLens evaluates you the way the college you choose would, then finds the scholarships you actually qualify for.
+            Upload your Common App and have it read the way your dream school's office reads it: rated, questioned and given a verdict. Then see every scholarship you actually qualify for, visa status included.
           </p>
           <div className="mt-9 flex flex-wrap justify-center gap-3">
             <Link href="/start" className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3.5 text-[15px] font-medium text-[var(--surface)] shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] transition hover:brightness-110">
