@@ -82,7 +82,7 @@ export function Intake() {
         <div className="space-y-4 bg-surface p-6">
           <div className="flex items-center gap-2 text-sm font-semibold"><Lock size={15} className="text-brand" /> Eligibility details (optional and private)</div>
           <p className="-mt-2 text-xs text-muted">
-            Many awards are limited by citizenship or immigration status. These answers stay on this device, are used only to filter, and are never printed in your PDF. Never share an SSN, A-number or passport number with any scholarship.
+            Many awards are limited by citizenship or immigration status. These answers are saved privately to your account, used only to filter, and never printed in your PDF. Never share an SSN, A-number or passport number with any scholarship.
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Citizenship / immigration status">

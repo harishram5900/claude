@@ -6,7 +6,6 @@ import { getCollege } from "@/data/colleges";
 import { analyzeEssay } from "@/lib/essay";
 import { evaluate, unweightedGpa } from "@/lib/engine";
 import { buildRoadmap, currentPhase } from "@/lib/roadmap";
-import { SAMPLE_PROFILE } from "@/lib/sample";
 import { useStore } from "@/lib/store";
 import { useCollege } from "@/lib/useCollege";
 import { money } from "@/lib/grantscout";
@@ -14,7 +13,7 @@ import { useFunding } from "@/lib/useFunding";
 import { fmtDeadline } from "@/components/funding/ResultCard";
 
 export default function Dashboard() {
-  const { profile, setProfile, profileComplete, tracker, dreamCollege, roadmapDone, ready } = useStore();
+  const { profile, profileComplete, tracker, dreamCollege, roadmapDone, ready, goals, onboarded } = useStore();
   const { college: dream } = useCollege(dreamCollege);
   const funding = useFunding();
   if (!ready) return null;
@@ -26,11 +25,11 @@ export default function Dashboard() {
         <Empty
           icon={<Sparkles size={22} />}
           title="No profile yet"
-          body="Import your Common App PDF or fill in your profile. Or explore with a realistic sample student."
+          body="Upload your Common App PDF and we'll fill in your grades, scores, activities, honors and essay. Or enter them yourself."
           action={
             <div className="flex flex-wrap justify-center gap-2">
-              <ButtonLink href="/profile">Build profile</ButtonLink>
-              <Button variant="secondary" onClick={() => setProfile(SAMPLE_PROFILE)}>Load sample</Button>
+              <ButtonLink href="/profile">Upload Common App</ButtonLink>
+              <ButtonLink href="/profile" variant="secondary">Enter manually</ButtonLink>
             </div>
           }
         />
@@ -44,12 +43,39 @@ export default function Dashboard() {
   const phase = currentPhase(profile.grade);
   const next = buildRoadmap(profile, dream).filter((m) => m.order >= phase && !roadmapDone[m.id]).slice(0, 4);
 
+  const GOAL_LINKS = {
+    admissions: { href: dream ? `/evaluate?college=${dream.id}` : "/evaluate", label: dream ? `Your ${dream.short} evaluation` : "Get your admissions evaluation", icon: GraduationCap },
+    scholarships: { href: "/scholarships", label: `${funding.results.length} scholarships you qualify for`, icon: Trophy },
+    essays: { href: "/essays", label: essay ? `Essay review: ${essay.grade}` : "Review your essays", icon: PenLine },
+    roadmap: { href: "/roadmap", label: "Your grade-by-grade roadmap", icon: Map },
+  } as const;
+
   return (
     <div className="rise">
       <PageHeader eyebrow="Dashboard" title={`Hi${profile.name ? `, ${profile.name.split(" ")[0]}` : ""}`} subtitle="Here's where your applications stand today." />
+      {!onboarded && (
+        <Card className="mb-6 flex flex-wrap items-center justify-between gap-3 p-5">
+          <div className="text-sm">Finish setting up: answer a few questions and upload your Common App.</div>
+          <ButtonLink href="/start">Continue setup</ButtonLink>
+        </Card>
+      )}
+      {goals.length > 0 && (
+        <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" data-testid="goal-links">
+          {goals.map((g) => {
+            const l = GOAL_LINKS[g];
+            return (
+              <Link key={g} href={l.href} className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-4 text-sm font-medium transition hover:border-brand">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand"><l.icon size={17} /></span>
+                <span>{l.label}</span>
+                <ArrowRight size={15} className="ml-auto text-muted" />
+              </Link>
+            );
+          })}
+        </div>
+      )}
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <CardHeader title="Dream school" icon={<Heart size={16} />} action={<Link href="/simulate" className="text-sm text-brand">Simulator →</Link>} />
+          <CardHeader title="Dream school" icon={<Heart size={16} />} action={<Link href="/evaluate" className="text-sm text-brand">Full evaluation →</Link>} />
           {ev && dream ? (
             <div className="grid gap-6 p-5 sm:grid-cols-[auto_1fr] sm:items-center">
               <Gauge value={ev.chance} label={fmtPct(ev.chance)} sub={dream.short} />
@@ -69,7 +95,7 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="p-5">
-              <Empty icon={<GraduationCap size={22} />} title="Pick a dream school" body="Set one in the simulator or on any college page." action={<ButtonLink href="/simulate">Open simulator</ButtonLink>} />
+              <Empty icon={<GraduationCap size={22} />} title="Pick a dream school" body="Choose one to get a full admissions evaluation from that college." action={<ButtonLink href="/evaluate">Choose a college</ButtonLink>} />
             </div>
           )}
         </Card>
@@ -115,7 +141,7 @@ export default function Dashboard() {
               const c = getCollege(t.collegeId);
               const e = c ? evaluate(profile, c, t.plan) : null;
               return (
-                <Link key={t.collegeId} href={`/simulate?college=${t.collegeId}`} className="flex items-center justify-between px-5 py-3 text-sm hover:bg-surface-2">
+                <Link key={t.collegeId} href={`/evaluate?college=${t.collegeId}`} className="flex items-center justify-between px-5 py-3 text-sm hover:bg-surface-2">
                   <span className="truncate">{t.collegeName}</span>
                   {e && <Badge tone={categoryTone(e.category)}>{fmtPct(e.chance)}</Badge>}
                 </Link>
@@ -137,7 +163,7 @@ export default function Dashboard() {
         </Card>
 
         <Card className="lg:col-span-2">
-          <CardHeader title="Top funding matches (GrantScout)" icon={<Trophy size={16} />} action={<Link href="/scholarships" className="text-sm text-brand">All →</Link>} />
+          <CardHeader title="Top scholarship matches" icon={<Trophy size={16} />} action={<Link href="/scholarships" className="text-sm text-brand">All →</Link>} />
           <div className="grid gap-3 p-5 sm:grid-cols-2">
             {scholarships.map((x) => (
               <a key={x.rec.name} href={x.rec.source_url} target="_blank" rel="noreferrer" className="rounded-xl border border-line p-3 transition hover:border-brand">

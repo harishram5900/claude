@@ -161,7 +161,7 @@ export function AddAward({ state }: { state: string }) {
         {imported && <p className="mt-2 text-sm text-good">{imported}</p>}
       </Card>
       <Card>
-        <CardHeader title={`Awards you've added (${customAwards.length})`} subtitle="Saved on this device only" />
+        <CardHeader title={`Awards you've added (${customAwards.length})`} subtitle="Saved to your account" />
         <ul className="divide-y divide-line">
           {customAwards.length === 0 && <li className="px-5 py-6 text-sm text-muted">Nothing yet. Use the research plan to find local awards, then add them here.</li>}
           {customAwards.map((r) => (

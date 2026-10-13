@@ -2,7 +2,6 @@
 // (activities, honors, essays, recommendations, context) drawn from plausible distributions
 // for a highly selective school's applicant pool. Seeded, so results are reproducible.
 import { DECILE_ACADEMICS } from "../src/data/calibration";
-import { SAMPLE_PROFILE } from "../src/lib/sample";
 import { EMPTY_PROFILE, type Activity, type Profile } from "../src/lib/types";
 import { ESSAYS } from "../tests/fixtures";
 
@@ -19,7 +18,7 @@ function pickW<T>(r: () => number, items: [T, number][]): T {
 const ESSAY_POOL: [string, number][] = [
   [ESSAYS.ESSAY_C, 0.2],
   [ESSAYS.ESSAY_A, 0.4],
-  [SAMPLE_PROFILE.personalStatement, 0.4],
+  [ESSAYS.ESSAY_B, 0.4],
 ];
 
 export function pool(decile: number, n: number, seed = 1): Profile[] {

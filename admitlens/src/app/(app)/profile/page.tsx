@@ -4,7 +4,7 @@ import { Badge, Button, Card, CardHeader, cx, Field, inputCls, PageHeader, Progr
 import { CollegePicker } from "@/components/CollegePicker";
 import { getCollege } from "@/data/colleges";
 import { CommonAppImport } from "@/components/CommonAppImport";
-import { SAMPLE_PROFILE } from "@/lib/sample";
+import { mergeImport } from "@/lib/commonapp";
 import { useStore } from "@/lib/store";
 import { STATES, type Activity, type Award, type Profile } from "@/lib/types";
 
@@ -75,7 +75,7 @@ export default function ProfilePage() {
       <PageHeader
         eyebrow="Your application"
         title="Profile"
-        subtitle="Fill this in once. The simulator, essay lab, scholarships and roadmap all read from it. Everything is stored only in this browser."
+        subtitle="Fill this in once. Your evaluation, essays, scholarships and roadmap all read from it. Changes save to your account automatically."
         action={
           <div className="w-full max-w-xs rounded-2xl border border-line bg-surface p-4 sm:w-64">
             <div className="flex items-center justify-between text-sm">
@@ -89,7 +89,7 @@ export default function ProfilePage() {
       />
 
       <div className="space-y-6">
-        <CommonAppImport onApply={(partial) => setProfile((prev) => ({ ...prev, ...partial }))} />
+        <CommonAppImport onApply={(partial) => setProfile((prev) => mergeImport(prev, partial))} />
 
         <Card>
           <CardHeader title="Basics" icon={<UserRound size={16} />} />
@@ -260,14 +260,11 @@ export default function ProfilePage() {
           </div>
         </Card>
 
-        <div className="flex flex-wrap justify-between gap-3">
-          <Button variant="secondary" onClick={() => setProfile(SAMPLE_PROFILE)}>
-            <Sparkles size={15} /> Load sample student
-          </Button>
+        <div className="flex flex-wrap justify-end gap-3">
           <Button
             variant="danger"
             onClick={() => {
-              if (confirm("Delete your profile, tracker, essays and roadmap progress from this browser?")) resetAll();
+              if (confirm("Erase your profile, tracker, essays and roadmap progress from your account? This can't be undone.")) resetAll();
             }}
           >
             <RotateCcw size={15} /> Erase all my data

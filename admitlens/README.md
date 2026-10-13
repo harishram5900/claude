@@ -29,7 +29,13 @@ npm test        # admissions engine, SFFA calibration, GrantScout, Common App pa
 | Variable | Purpose |
 | --- | --- |
 | `ANTHROPIC_API_KEY` | Enables AI deep reads, AI essay critique and AI-assisted Common App parsing (Claude Opus 5.5). Without it the deterministic engine still powers everything. |
+| `BLOB_READ_WRITE_TOKEN` | Turns on accounts. Added automatically when you connect a **private** Vercel Blob store to the project. Accounts and saved data live there. Without it the app still works and saves to the browser. |
+| `AUTH_SECRET` | 32+ random characters used to sign session cookies (required for accounts in production). |
 | `COLLEGE_SCORECARD_API_KEY` | Free key from https://api.data.gov/signup for live all-US college search. Falls back to `DEMO_KEY`, which is rate-limited. |
+
+## Accounts and onboarding
+
+New students go through `/start`: name, grade, goals (scholarships, admissions, essays, roadmap for 9th–11th graders), state and citizenship/visa status, account creation, Common App PDF upload, then their dream college, which opens the full evaluation. Passwords are hashed with scrypt; sessions are HMAC-signed httpOnly cookies; each student's data is one private JSON document. Locally (`npm run dev`) accounts are stored in `.data/`.
 
 ## Deploy to Vercel
 

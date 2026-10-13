@@ -37,7 +37,7 @@ export default function CollegeDetail({ params }: { params: Promise<{ id: string
             <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">{college.name}</h1>
             <p className="mt-1 text-muted">{college.city}, {college.state} · {college.enrollment ? `${college.enrollment.toLocaleString()} undergraduates` : ""}</p>
             <div className="mt-5 flex flex-wrap gap-2">
-              <ButtonLink href={`/simulate?college=${college.id}`}>
+              <ButtonLink href={`/evaluate?college=${college.id}`}>
                 <GraduationCap size={16} /> Full counselor review
               </ButtonLink>
               <Button variant={dreamCollege === college.id ? "primary" : "secondary"} onClick={() => setDreamCollege(dreamCollege === college.id ? null : college.id)}>

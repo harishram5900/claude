@@ -9,7 +9,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: { default: "AdmitLens: see your application the way admissions does", template: "%s · AdmitLens" },
   description:
-    "Simulate how admissions officers at the college you choose would read your application. Calibrated chances, counselor-style critique, essay coaching, scholarships, a college tracker and a roadmap to your dream school.",
+    "See how admissions officers at the college you choose would read your application: ratings, chances, a full committee evaluation, essay feedback, scholarships you qualify for, a college tracker and a roadmap to your dream school.",
   icons: { icon: "/icon.svg" },
 };
 
@@ -42,11 +42,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <span className="font-display text-lg font-semibold">AdmitLens</span>
                 </div>
                 <p className="mt-3 max-w-xs text-sm text-muted">
-                  A simulation of how admissions offices read applications, built on published college data. Not affiliated with any college or with Common App.
+                  Admissions evaluations built on each college's published data, plus scholarships matched to you. Estimates, not decisions. Not affiliated with any college or with Common App.
                 </p>
               </div>
               {[
-                ["Plan", [["Simulator", "/simulate"], ["Roadmap", "/roadmap"], ["Tracker", "/tracker"]]],
+                ["Plan", [["Evaluation", "/evaluate"], ["Roadmap", "/roadmap"], ["Tracker", "/tracker"]]],
                 ["Write & fund", [["Essay Lab", "/essays"], ["GrantScout funding", "/scholarships"], ["Learn from real admits", "/learn"]]],
                 ["About", [["How it works", "/about"], ["Your data & privacy", "/about#privacy"], ["Colleges", "/colleges"]]],
               ].map(([h, links]) => (

@@ -8,13 +8,12 @@ import { CounselorReport } from "@/components/CounselorReport";
 import { Badge, Button, ButtonLink, Card, CardHeader, categoryTone, cx, Empty, fmtPct, PageHeader } from "@/components/ui";
 import { getCollege, type College } from "@/data/colleges";
 import { evaluate, TIER_INFO } from "@/lib/engine";
-import { SAMPLE_PROFILE } from "@/lib/sample";
 import { guessDeadline } from "@/lib/deadline";
 import { useStore } from "@/lib/store";
 import type { AppPlan } from "@/lib/types";
 import { useCollege } from "@/lib/useCollege";
 
-function Simulator() {
+function Evaluation() {
   const params = useSearchParams();
   const router = useRouter();
   const { profile, setProfile, profileComplete, ready, dreamCollege, setDreamCollege, tracker, setTracker } = useStore();
@@ -28,7 +27,7 @@ function Simulator() {
 
   const pick = (c: College) => {
     setPlan("RD");
-    router.replace(`/simulate?college=${encodeURIComponent(c.id)}`, { scroll: false });
+    router.replace(`/evaluate?college=${encodeURIComponent(c.id)}`, { scroll: false });
   };
 
   const inTracker = college && tracker.some((t) => t.collegeId === college.id);
@@ -38,9 +37,9 @@ function Simulator() {
   return (
     <div className="rise">
       <PageHeader
-        eyebrow="Admissions simulator"
-        title="See your file through their eyes"
-        subtitle="Pick any college. A reader calibrated to that school's admit rate, score ranges and priorities grades your application, estimates your chances and tells you exactly what would change their mind."
+        eyebrow="Admissions evaluation"
+        title={college ? `Your ${college.short} evaluation` : "See your file through their eyes"}
+        subtitle="Pick any college. Its admissions reader rates every part of your application against that school's admitted students, gives your chances, writes how your file would be reviewed and tells you exactly what to fix."
       />
 
       {profileComplete < 40 && (
@@ -51,14 +50,11 @@ function Simulator() {
             </div>
             <div>
               <div className="font-semibold">Your profile is {profileComplete}% complete</div>
-              <p className="text-sm text-muted">Results are only as good as your inputs. Import your Common App or fill in your profile. Or try a realistic sample student first.</p>
+              <p className="text-sm text-muted">Your evaluation is only as good as what's in your file. Upload your Common App PDF and we'll fill in your grades, scores, activities, honors and essay.</p>
             </div>
           </div>
           <div className="flex shrink-0 gap-2">
-            <Button variant="secondary" onClick={() => setProfile(SAMPLE_PROFILE)}>
-              <Sparkles size={16} /> Load sample
-            </Button>
-            <ButtonLink href="/profile">Complete profile</ButtonLink>
+            <ButtonLink href="/profile">Upload Common App or complete profile</ButtonLink>
           </div>
         </Card>
       )}
@@ -111,9 +107,14 @@ function Simulator() {
 
       {loading && <div className="py-16 text-center text-muted">Loading college data…</div>}
       {!college && !loading && (
-        <Empty icon={<GraduationCap size={22} />} title="Choose a college to simulate" body="Search any US college. Elite schools are read very differently from regional publics, and you'll see exactly how." />
+        <Empty icon={<GraduationCap size={22} />} title="Choose a college" body="Search any US college. Elite schools are read very differently from regional publics, and you'll see exactly how." />
       )}
       {ev && <CounselorReport ev={ev} profile={profile} />}
+      {ev && (
+        <p className="mt-4 text-xs text-muted">
+          Chances are estimates from {college!.short}'s published admit rate, score ranges and priorities, calibrated on real admissions outcomes. Actual decisions also depend on recommendations, interviews and institutional needs no outside tool can see.
+        </p>
+      )}
 
       {/* Comparison */}
       <Card className="mt-8">
@@ -145,7 +146,7 @@ function Simulator() {
                   return (
                     <tr key={c.id}>
                       <td className="py-2.5">
-                        <Link href={`/simulate?college=${c.id}`} className="font-medium hover:text-brand">
+                        <Link href={`/evaluate?college=${c.id}`} className="font-medium hover:text-brand">
                           {c.short}
                         </Link>
                       </td>
@@ -177,7 +178,7 @@ function Simulator() {
 export default function Page() {
   return (
     <Suspense>
-      <Simulator />
+      <Evaluation />
     </Suspense>
   );
 }

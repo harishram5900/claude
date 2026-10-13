@@ -2,6 +2,7 @@
 import { AlertTriangle, Check, FileText, FileUp, Loader2, ShieldCheck, Upload, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { extractPdfText, parseCommonApp } from "@/lib/commonapp";
+import { STATUS_OPTIONS } from "@/lib/grantscout";
 import type { Activity, Award, Profile } from "@/lib/types";
 import { useAiStatus } from "@/lib/useCollege";
 import { Badge, Button, Card, cx, inputCls } from "./ui";
@@ -12,7 +13,7 @@ type Key = keyof Profile;
 interface Row {
   key: Key;
   label: string;
-  value: string;
+  value: React.ReactNode;
 }
 
 const LABELS: Partial<Record<Key, string>> = {
@@ -30,13 +31,44 @@ const LABELS: Partial<Record<Key, string>> = {
   activities: "Activities",
   awards: "Honors",
   personalStatement: "Personal essay",
+  honorsCount: "Honors courses",
   firstGen: "First-generation",
   lowIncome: "Fee waiver / limited resources",
+  funding: "Scholarship eligibility (private)",
 };
 
-function describe(key: Key, v: unknown): string {
-  if (key === "activities") return (v as Activity[]).map((a) => `${a.role ? a.role + ", " : ""}${a.name}`).join(" · ");
-  if (key === "awards") return (v as Award[]).map((a) => `${a.name} (${a.level})`).join(" · ");
+function describe(key: Key, v: unknown): React.ReactNode {
+  if (key === "activities")
+    return (
+      <ol className="space-y-2">
+        {(v as Activity[]).map((a, i) => (
+          <li key={a.id}>
+            <span className="font-medium text-ink">{i + 1}. {a.name}</span>
+            {a.role && <span> · {a.role}</span>}
+            <span className="text-xs"> · {a.category} · {a.years} yr · {a.hoursPerWeek} hr/wk · {a.weeksPerYear} wk/yr{a.leadership ? " · leadership" : ""}</span>
+            {a.description && <div className="text-xs">{a.description}</div>}
+          </li>
+        ))}
+      </ol>
+    );
+  if (key === "awards")
+    return (
+      <ul className="space-y-1">
+        {(v as Award[]).map((a) => (
+          <li key={a.id}><span className="text-ink">{a.name}</span> <span className="text-xs capitalize">({a.level})</span></li>
+        ))}
+      </ul>
+    );
+  if (key === "funding") {
+    const f = v as NonNullable<Profile["funding"]>;
+    const bits = [
+      f.residenceStatus && STATUS_OPTIONS.find(([k]) => k === f.residenceStatus)?.[1],
+      f.citizenships?.length ? `other citizenship: ${f.citizenships.join(", ")}` : "",
+      f.city ? `city: ${f.city}` : "",
+      f.age ? `age ${f.age}` : "",
+    ].filter(Boolean);
+    return `${bits.join(" · ")}. Used only to match scholarships, never shown in reports.`;
+  }
   if (key === "personalStatement") {
     const t = String(v);
     return `${t.split(/\s+/).length} words: "${t.slice(0, 110)}…"`;
@@ -46,7 +78,7 @@ function describe(key: Key, v: unknown): string {
   return String(v);
 }
 
-export function CommonAppImport({ onApply }: { onApply: (p: Partial<Profile>) => void }) {
+export function CommonAppImport({ onApply, compact = false }: { onApply: (p: Partial<Profile>) => void; compact?: boolean }) {
   const ai = useAiStatus();
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -59,7 +91,7 @@ export function CommonAppImport({ onApply }: { onApply: (p: Partial<Profile>) =>
   const [done, setDone] = useState<string | null>(null);
 
   const stage = (profile: Partial<Profile>, missing: string[], fileName: string) => {
-    const keys = (Object.keys(profile) as Key[]).filter((k) => k in LABELS && profile[k] !== undefined && profile[k] !== null);
+    const keys = (Object.keys(profile) as Key[]).filter((k) => k in LABELS && profile[k] !== undefined && profile[k] !== null && !(k === "funding" && !Object.keys(profile.funding ?? {}).length));
     if (keys.length === 0) {
       setErr("We couldn't recognize any application fields in that file. Make sure it's the PDF from Common App's Preview, not a scanned image.");
       return;
@@ -117,7 +149,7 @@ export function CommonAppImport({ onApply }: { onApply: (p: Partial<Profile>) =>
       }
     }
     const r = parseCommonApp(text);
-    stage(r.profile, r.missing, fileName);
+    stage(Object.keys(r.funding).length ? { ...r.profile, funding: r.funding as Profile["funding"] } : r.profile, r.missing, fileName);
     setBusy(null);
   };
 
@@ -142,7 +174,7 @@ export function CommonAppImport({ onApply }: { onApply: (p: Partial<Profile>) =>
     for (const [k, on] of Object.entries(selected)) if (on) (out as Record<string, unknown>)[k] = pending.profile[k as Key];
     // A weighted GPA alone is converted later; flag it so the student can add the unweighted one.
     onApply(out);
-    setDone(`Imported ${Object.values(selected).filter(Boolean).length} fields from ${pending.fileName}. Review them below.`);
+    setDone(`Imported ${Object.values(selected).filter(Boolean).length} fields from ${pending.fileName}.${compact ? "" : " You can edit any of them below."}`);
     setPending(null);
   };
 
@@ -162,11 +194,11 @@ export function CommonAppImport({ onApply }: { onApply: (p: Partial<Profile>) =>
           <ol className="mt-4 space-y-2 text-sm text-muted">
             <li><span className="mr-2 font-mono text-xs text-ink">01</span>In Common App, open <b className="text-ink">My Colleges</b>, choose any college, then <b className="text-ink">Review and submit</b>.</li>
             <li><span className="mr-2 font-mono text-xs text-ink">02</span>Click <b className="text-ink">Preview</b> and save the PDF.</li>
-            <li><span className="mr-2 font-mono text-xs text-ink">03</span>Upload it here. You'll review every field before anything is saved.</li>
+            <li><span className="mr-2 font-mono text-xs text-ink">03</span>Upload it here. We fill in your grades, scores, activities, honors and essay, and skip page numbers, headers and the "Preview" watermark. You confirm before anything is saved.</li>
           </ol>
           <p className="mt-4 flex gap-2 text-xs text-muted">
             <ShieldCheck size={14} className="mt-0.5 shrink-0 text-good" />
-            The PDF is read inside your browser and stored only on this device. Common App doesn't offer outside apps direct access to your account, so this uses the PDF you download yourself.
+            The PDF is read inside your browser and the file itself is never uploaded. Only the fields you confirm are saved to your account. Common App doesn't let outside apps into your account, so this uses the PDF you download yourself.
           </p>
         </div>
         <div className="p-6">
@@ -247,7 +279,7 @@ export function CommonAppImport({ onApply }: { onApply: (p: Partial<Profile>) =>
               <label key={r.key} className="flex cursor-pointer items-start gap-3 px-6 py-3 text-sm hover:bg-surface-2/50">
                 <input type="checkbox" className="mt-1 accent-[var(--brand)]" checked={!!selected[r.key]} onChange={(e) => setSelected((s) => ({ ...s, [r.key]: e.target.checked }))} />
                 <span className="w-40 shrink-0 font-medium">{r.label}</span>
-                <span className="min-w-0 text-muted">{r.value}</span>
+                <span className="min-w-0 flex-1 text-muted">{r.value}</span>
               </label>
             ))}
           </div>

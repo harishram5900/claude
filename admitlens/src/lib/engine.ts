@@ -203,6 +203,29 @@ export interface Evaluation {
   essay: EssayAnalysis | null;
   flags: string[];
   inputsHash: string;
+  /** How this office actually moves a file from first read to decision. */
+  reviewProcess: string;
+  /** The full written evaluation, in this office's voice. */
+  evaluation: string;
+  /** Where the file most likely lands in committee. */
+  decision: string;
+  activityReads: ActivityRead[];
+  awardReads: AwardRead[];
+}
+
+export interface ActivityRead {
+  id: string;
+  name: string;
+  role: string;
+  tier: 1 | 2 | 3 | 4; // 1 = rare distinction … 4 = participation
+  label: string;
+  comment: string;
+}
+export interface AwardRead {
+  id: string;
+  name: string;
+  level: string;
+  comment: string;
 }
 
 const RATING_LABEL: Record<number, string> = {
@@ -554,6 +577,7 @@ function writeMemo(p: Profile, c: College, tier: Tier, k: Core, rel: number) {
   let committeeLine: string;
   if (rel >= 0.5) committeeLine = `"${name}: ${pitchPieces.join(", ") || "consistently strong file"}. I'd advocate."`;
   else if (rel >= 0.2) committeeLine = `"${name}: ${pitchPieces.join(", ") || "qualified"}, but ${concerns[0] ? concerns[0].charAt(0).toLowerCase() + concerns[0].slice(1).replace(/\.$/, "") : "not yet distinctive in this pool"}. Hold for the committee."`;
+  else if (rel >= 0.08) committeeLine = `"${name}: ${concerns[0]?.replace(/\.$/, "") || `not distinctive in this year's ${c.short} pool`}. Waitlist at best as it stands."`;
   else committeeLine = `"${name}: ${concerns[0]?.replace(/\.$/, "") || `not competitive in this year's ${c.short} pool`}. Recommend deny unless something changes."`;
 
   return { memo, strengths, concerns, committeeLine };
@@ -638,6 +662,201 @@ const STRONG_ESSAY_PROXY = `The radiator in Room 114 clanked twice before every 
 She showed me the 1962 boiler, the patched valve she named Gerald, the way pressure finds the weakest joint. I filled nineteen pages with sketches. On the fourth Saturday I asked why the east wing was always cold, and she shrugged: nobody had asked. I measured temperatures in eleven classrooms for two weeks, found a 9-degree gap, and wrote a two-page memo to the district facilities office. They replaced a stuck damper in December.
 I used to think understanding meant being handed the right answer. Now I go looking for the Geralds: the overlooked joint where a small fix changes everything. I still flinch when the radiator clanks. But now I also wonder where the pressure is going, and who else has stopped asking why.`;
 
+// ---------- detailed reads
+const pct = (x: number) => (x >= 0.995 ? ">99%" : x < 0.01 ? "<1%" : `${Math.round(x * 100)}%`);
+const planName = (pl: AppPlan) => ({ RD: "Regular Decision", ED: "Early Decision", ED2: "Early Decision II", EA: "Early Action", REA: "Restrictive Early Action" })[pl];
+
+function activityTier(a: Activity): ActivityRead["tier"] {
+  if (a.impact === "international" || (a.impact === "national" && (a.leadership || a.founder))) return 1;
+  if (a.impact === "national" || a.impact === "state" || (a.founder && a.impact === "local" && a.years >= 2)) return 2;
+  if (a.leadership || a.impact === "local" || a.founder) return 3;
+  return 4;
+}
+const TIER_LABEL = { 1: "Tier 1 · rare distinction", 2: "Tier 2 · regional/state standout", 3: "Tier 3 · solid leadership", 4: "Tier 4 · participation" } as const;
+
+function readActivities(p: Profile, c: College, tier: Tier): ActivityRead[] {
+  const elite = tier <= 2;
+  return [...p.activities]
+    .sort((a, b) => activityPoints(b) - activityPoints(a))
+    .slice(0, 10)
+    .map((a) => {
+      const t = activityTier(a);
+      const hrs = Math.round(a.hoursPerWeek * a.weeksPerYear);
+      const bits: string[] = [];
+      if (t === 1) bits.push(elite ? `This is the kind of distinction that gets a file flagged at ${c.short}.` : "Exceptional for our pool; it will be noticed immediately.");
+      else if (t === 2) bits.push(elite ? `Strong, and above what most ${c.short} applicants show, but I'd want to see measurable results.` : "A clear strength here.");
+      else if (t === 3) bits.push(elite ? `Leadership at the school or local level is common in ${c.short}'s pool. It supports the file but won't distinguish it.` : "Solid leadership that helps your file.");
+      else bits.push(elite ? `Membership alone carries little weight at ${c.short}.` : "Shows involvement; leadership or results would add weight.");
+      if (a.years >= 3 && hrs >= 300) bits.push(`${a.years} years and about ${hrs} hours a year shows real commitment.`);
+      else if (a.years <= 1) bits.push("Only one year, so it reads as recent.");
+      else if (a.hoursPerWeek > 0 && a.hoursPerWeek < 2) bits.push("Under 2 hours a week reads as light involvement.");
+      if (!a.description.trim()) bits.push("No description, so the reader can't see what you accomplished.");
+      else if (!/\d/.test(a.description)) bits.push("The description has no numbers; add results (people served, money raised, ranks, members).");
+      return { id: a.id, name: a.name, role: a.role, tier: t, label: TIER_LABEL[t], comment: bits.join(" ") };
+    });
+}
+
+function readAwards(p: Profile, c: College, tier: Tier): AwardRead[] {
+  const elite = tier <= 2;
+  const order = { international: 0, national: 1, state: 2, regional: 3, school: 4 } as const;
+  return [...p.awards]
+    .sort((a, b) => order[a.level] - order[b.level])
+    .slice(0, 5)
+    .map((w) => {
+      const comment =
+        w.level === "international" || w.level === "national"
+          ? elite
+            ? `National-level recognition. This is the outside validation ${c.short} readers look for.`
+            : "National-level recognition stands out strongly here."
+          : w.level === "state"
+            ? elite
+              ? `State recognition is good but common among ${c.short} admits.`
+              : "State-level recognition is a real plus."
+            : elite
+              ? `School or regional honors rarely register at ${c.short}.`
+              : "Shows strong standing at your school.";
+      return { id: w.id, name: w.name, level: w.level, comment };
+    });
+}
+
+function decisionFor(rel: number, chance: number, tier: Tier) {
+  if (tier >= 4 && chance >= 0.8) return "Admit";
+  if (rel >= 0.75) return "Admit pile: likely admit";
+  if (rel >= 0.5) return "Strong consideration: likely admitted in committee";
+  if (rel >= 0.22) return "Committee discussion: could go either way";
+  if (rel >= 0.08) return "Waitlist range";
+  return "Likely deny as it stands";
+}
+
+function reviewProcess(p: Profile, c: College, tier: Tier, plan: AppPlan) {
+  const parts: string[] = [];
+  const region = p.state && p.state !== "International" ? `${p.state} schools` : "your region";
+  if (tier <= 2) {
+    parts.push(
+      `At ${c.name}, your application is first read by the admissions officer responsible for ${region}. They start with your school profile and counselor letter to see what was available to you, then rate your academics, activities, personal qualities and recommendations.`,
+      `Files with strong ratings get a second read and go to committee, where your officer presents your case in a few minutes and the group votes. With a ${pct(c.admitRate)} admit rate, most fully qualified applicants are still turned down, so the committee is looking for a reason to choose you, not a reason to reject you.`,
+    );
+  } else if (tier === 3) {
+    parts.push(
+      `${c.name} reads holistically, but academics come first: your GPA and course rigor are checked against what's typical for admitted students${p.intendedMajor ? ` in or near ${p.intendedMajor}` : ""}. Files that clear that bar are decided by essays, activities and recommendations.`,
+    );
+  } else {
+    parts.push(
+      `${c.name} relies mostly on your GPA and the courses behind it. A counselor checks that you completed a solid college-prep curriculum with grades that predict success. Essays and activities matter for borderline files, honors programs and merit scholarships.`,
+    );
+  }
+  parts.push(
+    c.testPolicy === "required"
+      ? "SAT or ACT scores are required."
+      : c.testPolicy === "blind"
+        ? "Test scores are not considered at all."
+        : `Testing is optional; ${tier <= 2 ? "submitted scores in the upper half of the range help" : "submit only if your score is at or above the middle of the range"}.`,
+  );
+  if (c.control === "Public" && c.inStateFactor && c.inStateFactor > 1)
+    parts.push(p.state === c.state ? `As a ${c.state} resident you're reviewed in the in-state pool, which is admitted at a higher rate.` : `As an out-of-state applicant you compete for fewer seats than ${c.state} residents.`);
+  if (plan !== "RD") parts.push(`Applying ${planName(plan)} puts you in a smaller round that is usually admitted at a higher rate${plan === "ED" || plan === "ED2" ? ", and the decision is binding" : ""}.`);
+  if (c.considersLegacy && tier <= 2) parts.push("Legacy status is considered here.");
+  if (c.values.length) parts.push(`What this office says it rewards: ${c.values.slice(0, 3).join("; ")}.`);
+  return parts.join(" ");
+}
+
+function writeEvaluation(
+  p: Profile,
+  c: College,
+  tier: Tier,
+  k: Core,
+  x: { chance: number; low: number; high: number; decision: string; activityReads: ActivityRead[]; awardReads: AwardRead[]; improvement: Improvement | null; plan: AppPlan },
+) {
+  const d = Object.fromEntries(k.dims.map((v) => [v.key, v])) as Record<DimensionResult["key"], DimensionResult>;
+  const name = p.name.split(" ")[0] || "This applicant";
+  const elite = tier <= 2;
+  const S: string[] = [];
+  S.push(`Reading ${name}'s file for ${c.short}${x.plan !== "RD" ? ` in ${planName(x.plan)}` : ""}:`);
+
+  // Academics
+  const g = k.ctx.gpa;
+  if (g != null) {
+    const gap = g - c.gpa;
+    S.push(
+      `academically, a ${g.toFixed(2)} unweighted GPA ${gap >= 0.05 ? `is above` : gap >= -0.05 ? "matches" : "is below"} the ~${c.gpa.toFixed(2)} we typically admit (rated ${d.academics.rating}/6)${p.classRankPercent ? `, with a class rank in the top ${p.classRankPercent}%` : ""}. With ${p.apCount} AP/IB/dual-enrollment course${p.apCount === 1 ? "" : "s"}, the schedule ${d.rigor.rating <= 2 ? "is demanding" : d.rigor.rating === 3 ? "is about what we expect" : `looks light for ${c.short}, where readers ask whether you took the hardest path available`} (rigor rated ${d.rigor.rating}/6).`,
+    );
+  } else S.push("there's no GPA on file, so the academic read is incomplete and I have to assume the worst.");
+  if (d.testing) {
+    if (k.ctx.sat) S.push(`The ${k.ctx.sat} SAT-equivalent sits around the ${pctOrdinal(k.ctx.satPct ?? 50)} percentile of our ${k.ctx.satRange[0]}–${k.ctx.satRange[1]} range${d.testing.rating >= 4 ? `, which pulls the academic read down${c.testPolicy === "optional" ? "; consider not submitting it" : ""}` : ""}.`);
+    else if (c.testPolicy === "required") S.push(`There are no test scores, and ${c.short} requires them, so the file isn't complete.`);
+    else S.push("No test scores, so the transcript carries the academic case alone.");
+  }
+
+  // Activities
+  const acts = x.activityReads;
+  if (!acts.length) S.push(elite ? `There are no activities listed, which on its own would end the read at ${c.short}.` : "No activities are listed, which leaves nothing for me to advocate with.");
+  else {
+    const top = acts.slice(0, 2).map((a) => `${a.name} (${a.role ? `${a.role}; ` : ""}${a.label.split(" · ")[0]})`);
+    const tiers = acts.map((a) => a.tier);
+    const best = Math.min(...tiers);
+    S.push(
+      `Outside class, the strongest commitments are ${top.join(" and ")}. ${
+        best === 1
+          ? "That is a genuine distinction and the center of any case I'd make in committee."
+          : best === 2
+            ? elite
+              ? `That's above the typical applicant, but ${c.short} sees many state-level standouts; what's missing is one achievement only you have.`
+              : "That clearly stands out in our pool."
+            : elite
+              ? `Nothing here rises above school or local leadership, which describes most of the ${c.short} pool. Right now there's no single thing I'd remember this file for.`
+              : "It's a respectable record for our pool."
+      }${k.ctx.aligned ? ` The activities connect to ${p.intendedMajor}, which gives the file a clear story.` : p.intendedMajor ? ` I don't yet see how the activities connect to ${p.intendedMajor}.` : ""}`,
+    );
+  }
+
+  // Awards
+  if (x.awardReads.length) {
+    const w = x.awardReads[0];
+    const strong = w.level === "national" || w.level === "international";
+    S.push(
+      `For honors, ${w.name} (${w.level}) leads the list${x.awardReads.length > 1 ? ` of ${x.awardReads.length}` : ""}: ${
+        strong ? `that's the outside validation ${c.short} readers look for.` : w.level === "state" ? (elite ? `solid, but state recognition is common among ${c.short} admits.` : "a real plus here.") : elite ? `school-level honors rarely register at ${c.short}.` : "it shows strong standing at your school."
+      }`,
+    );
+  }
+  else S.push(elite ? `There are no honors listed, and many ${c.short} admits bring outside recognition.` : "No honors are listed; that's not disqualifying here.");
+
+  // Essay
+  if (k.essay) {
+    const e = k.essay;
+    const dims = Object.entries(e.scores).filter(([, v]) => v != null) as [string, number][];
+    const strongest = [...dims].sort((a, b) => b[1] - a[1])[0];
+    const weakest = [...dims].sort((a, b) => a[1] - b[1])[0];
+    S.push(
+      `The personal statement grades ${e.grade} (${e.overall}/100): strongest on ${strongest[0]} (${strongest[1]}), weakest on ${weakest[0]} (${weakest[1]}). ${
+        d.essays.rating <= 2
+          ? "It has a voice I'd remember."
+          : d.essays.rating === 3
+            ? elite
+              ? `It's competent, but at ${c.short} a competent essay doesn't move committee; it has to reveal something the rest of the file can't.`
+              : "It does its job but could do more for you."
+            : d.essays.rating === 4
+              ? `It's below what ${c.short} readers expect and isn't helping the file yet.`
+              : "Right now it hurts the file more than it helps."
+      }${e.issues[0] ? ` First thing to fix: ${e.issues[0].advice}` : ""}`,
+    );
+  } else S.push(elite ? `There's no personal statement, so I can't learn who you are beyond the numbers, and I can't advocate for a file I can't hear.` : "There's no personal statement yet; it matters less here but can tip a close decision.");
+
+  // Context
+  const ctx: string[] = [];
+  if (p.firstGen) ctx.push("first-generation status");
+  if (p.lowIncome) ctx.push("limited family resources");
+  if (p.significantResponsibilities) ctx.push("significant work or family responsibilities");
+  if (ctx.length) S.push(`I read all of this in the context of ${ctx.join(" and ")}, which makes what's here more impressive.`);
+
+  // Outcome
+  S.push(
+    `Overall I'd rate this file ${ratingFromZ((k.logitScore - logit(c.admitRate) - BASE_OFFSET((tier - 1) / 4)) / 1.4)}/6 for ${c.short}. Where it lands: ${x.decision.toLowerCase()}, with an estimated ${pct(x.chance)} chance (range ${pct(x.low)}–${pct(x.high)}) against a ${pct(c.admitRate)} overall admit rate.`,
+  );
+  if (x.improvement) S.push(`The change that would move this file most: ${x.improvement.title.charAt(0).toLowerCase()}${x.improvement.title.slice(1)} (about +${x.improvement.gain.toFixed(1)} points).`);
+  return S.join(" ");
+}
+
 // ---------- public entry point
 export function evaluate(p: Profile, c: College, plan: AppPlan = "RD"): Evaluation {
   const tier = tierOf(c);
@@ -652,10 +871,15 @@ export function evaluate(p: Profile, c: College, plan: AppPlan = "RD"): Evaluati
   const { memo, strengths, concerns, committeeLine } = writeMemo(p, c, tier, k, rel);
   const overallZ = k.logitScore - logit(c.admitRate) - BASE_OFFSET((tier - 1) / 4);
   const overallRating = ratingFromZ(overallZ / 1.4);
+  const imps = improvements(p, c, plan, chance);
+  const activityReads = readActivities(p, c, tier);
+  const awardReads = readAwards(p, c, tier);
+  const decision = decisionFor(rel, chance, tier);
+  const evaluation = writeEvaluation(p, c, tier, k, { chance, low: chanceLow, high: chanceHigh, decision, activityReads, awardReads, improvement: imps[0] ?? null, plan });
   return {
     college: c,
     tier,
-    reader: `${TIER_INFO[tier].reader}, ${c.short} (simulated)`,
+    reader: `${TIER_INFO[tier].reader}, ${c.short}`,
     plan,
     chance,
     chanceLow,
@@ -669,10 +893,15 @@ export function evaluate(p: Profile, c: College, plan: AppPlan = "RD"): Evaluati
     concerns,
     memo,
     committeeLine,
-    improvements: improvements(p, c, plan, chance),
+    improvements: imps,
     essay: k.essay,
     flags: k.flags,
     inputsHash: hash(JSON.stringify(p) + c.id + plan).toString(36),
+    reviewProcess: reviewProcess(p, c, tier, plan),
+    evaluation,
+    decision,
+    activityReads,
+    awardReads,
   };
 }
 

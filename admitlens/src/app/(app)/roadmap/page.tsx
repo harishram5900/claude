@@ -152,7 +152,7 @@ export default function RoadmapPage() {
               <div className="font-display text-xl font-semibold">{college ? `Admitted to ${college.short}` : "Decision day"}</div>
               <p className="mt-1 text-sm text-muted">Most decisions arrive mid-December (early) or late March (regular). Commit by May 1.</p>
               {college && (
-                <ButtonLink href={`/simulate?college=${college.id}`} className="mt-3">
+                <ButtonLink href={`/evaluate?college=${college.id}`} className="mt-3">
                   See the full counselor review
                 </ButtonLink>
               )}

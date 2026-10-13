@@ -1,5 +1,6 @@
 "use client";
-import { AlertTriangle, ArrowUpRight, CheckCircle2, Gavel, Loader2, MessageSquareQuote, Sparkles, TrendingUp, XCircle } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, Award, CheckCircle2, FileText, Gavel, Landmark, ListChecks, Loader2, MessageSquareQuote, PenLine, Sparkles, TrendingUp, XCircle } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import type { College } from "@/data/colleges";
 import { RATING_TEXT, TIER_INFO, type Evaluation } from "@/lib/engine";
@@ -57,7 +58,9 @@ export function CounselorReport({ ev, profile }: { ev: Evaluation; profile: Prof
                 <Badge tone="neutral">{TIER_INFO[ev.tier].label}</Badge>
                 <Badge tone="neutral">{ev.plan === "RD" ? "Regular Decision" : ev.plan}</Badge>
               </div>
-              <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight sm:text-3xl">{ev.verdict}</h2>
+              <div className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">Likely outcome</div>
+              <div className="font-medium" data-testid="decision">{ev.decision}</div>
+              <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl">{ev.verdict}</h2>
               <p className="mt-1 text-sm text-muted">
                 {c.name}: {(c.admitRate * 100).toFixed(c.admitRate < 0.1 ? 1 : 0)}% overall admit rate. Reader: {ev.reader}.
               </p>
@@ -83,10 +86,24 @@ export function CounselorReport({ ev, profile }: { ev: Evaluation; profile: Prof
         )}
       </Card>
 
+      {/* Full written evaluation */}
+      <Card>
+        <CardHeader title={`Admissions evaluation: ${c.short}`} subtitle={`Written as ${ev.reader} would read your full file`} icon={<FileText size={16} />} />
+        <div className="space-y-4 px-5 py-5">
+          <p className="text-[15.5px] leading-[1.75]" data-testid="evaluation">{ev.evaluation}</p>
+          <div className="rounded-xl border border-line bg-surface-2/60 p-4">
+            <div className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted">
+              <Landmark size={13} /> How {c.short} reviews your application
+            </div>
+            <p className="text-sm leading-relaxed">{ev.reviewProcess}</p>
+          </div>
+        </div>
+      </Card>
+
       <div className="grid gap-6 lg:grid-cols-5">
         {/* Ratings */}
         <Card className="lg:col-span-2">
-          <CardHeader title="Reader ratings" subtitle={`1 = exceptional for ${c.short} · 6 = not competitive here`} icon={<Gavel size={16} />} />
+          <CardHeader title="Ratings by category" subtitle={`1 = exceptional for ${c.short} · 6 = not competitive here`} icon={<Gavel size={16} />} />
           <div className="divide-y divide-line">
             {ev.dimensions.map((d) => (
               <div key={d.key} className="flex items-center gap-3 px-5 py-3">
@@ -105,7 +122,7 @@ export function CounselorReport({ ev, profile }: { ev: Evaluation; profile: Prof
 
         {/* Memo */}
         <Card className="lg:col-span-3">
-          <CardHeader title="Reader memo" subtitle="How this file reads to a reader at this school" icon={<MessageSquareQuote size={16} />} />
+          <CardHeader title="Reader notes" subtitle="Category by category, in the reader's voice" icon={<MessageSquareQuote size={16} />} />
           <div className="space-y-3 px-5 py-4 text-[15px] leading-relaxed">
             {ev.memo.map((m, i) => (
               <p key={i} className={i === 0 ? "font-display text-lg italic" : ""}>
@@ -118,6 +135,74 @@ export function CounselorReport({ ev, profile }: { ev: Evaluation; profile: Prof
             </div>
           </div>
         </Card>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-5">
+        <Card className="lg:col-span-3">
+          <CardHeader title="Activity-by-activity read" subtitle={`How each activity reads at ${c.short}`} icon={<ListChecks size={16} />} />
+          <div className="divide-y divide-line">
+            {ev.activityReads.length === 0 && <p className="px-5 py-4 text-sm text-muted">No activities on file. Upload your Common App or add them in your profile.</p>}
+            {ev.activityReads.map((a) => (
+              <div key={a.id} className="px-5 py-3" data-testid="activity-read">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-medium">
+                    {a.name}
+                    {a.role && <span className="font-normal text-muted"> · {a.role}</span>}
+                  </span>
+                  <Badge tone={a.tier === 1 ? "good" : a.tier === 2 ? "brand" : a.tier === 3 ? "neutral" : "warn"}>{a.label}</Badge>
+                </div>
+                <p className="mt-1 text-sm text-muted">{a.comment}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+        <div className="space-y-6 lg:col-span-2">
+          <Card>
+            <CardHeader title="Honors & awards" icon={<Award size={16} />} />
+            <div className="divide-y divide-line">
+              {ev.awardReads.length === 0 && <p className="px-5 py-4 text-sm text-muted">No honors listed.</p>}
+              {ev.awardReads.map((w) => (
+                <div key={w.id} className="px-5 py-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-medium">{w.name}</span>
+                    <Badge className="capitalize">{w.level}</Badge>
+                  </div>
+                  <p className="mt-1 text-sm text-muted">{w.comment}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
+          <Card>
+            <CardHeader title="Personal essay" icon={<PenLine size={16} />} />
+            {ev.essay ? (
+              <div className="px-5 py-4 text-sm">
+                <div className="flex items-baseline gap-2">
+                  <span className="font-display text-3xl font-semibold">{ev.essay.grade}</span>
+                  <span className="text-muted">{ev.essay.overall}/100 · {ev.essay.words} words</span>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1">
+                  {Object.entries(ev.essay.scores)
+                    .filter(([, v]) => v != null)
+                    .map(([k, v]) => (
+                      <div key={k} className="flex justify-between capitalize">
+                        <span className="text-muted">{k}</span>
+                        <span className="tabular-nums">{v}</span>
+                      </div>
+                    ))}
+                </div>
+                {ev.essay.issues.slice(0, 3).map((i) => (
+                  <div key={i.excerpt} className="mt-3 rounded-lg border border-line p-2.5">
+                    <div className="text-xs italic text-muted">“{i.excerpt}”</div>
+                    <div className="mt-1">{i.advice}</div>
+                  </div>
+                ))}
+                <Link href="/essays" className="mt-3 inline-block text-sm text-brand">Revise in the Essay Lab →</Link>
+              </div>
+            ) : (
+              <p className="px-5 py-4 text-sm text-muted">No personal statement on file yet.</p>
+            )}
+          </Card>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
