@@ -33,7 +33,7 @@ const STEPS = ["Name", "Grade", "Goals", "Status", "Account", "Application", "Co
 
 export default function Start() {
   const router = useRouter();
-  const { ready, user, accountsAvailable, profile, setProfile, goals, setGoals, setOnboarded, setDreamCollege, signUp } = useStore();
+  const { ready, user, accountsAvailable, onboarded, profile, setProfile, goals, setGoals, setOnboarded, setDreamCollege, signUp } = useStore();
   const [step, setStep] = useState(0);
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
@@ -44,6 +44,11 @@ export default function Start() {
   const [err, setErr] = useState<string | null>(null);
   const [statusChoice, setStatusChoice] = useState<string | null>(null);
   const [imported, setImported] = useState(false);
+
+  // Already set up and signed in: nothing to redo here; edits happen in the profile.
+  useEffect(() => {
+    if (ready && user && onboarded && step === 0) router.replace("/dashboard");
+  }, [ready, user, onboarded, step, router]);
 
   // Prefill from anything already entered (e.g. a refresh mid-way).
   useEffect(() => {

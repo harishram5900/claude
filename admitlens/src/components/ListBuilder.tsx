@@ -37,7 +37,7 @@ export function ListBuilder() {
     <Card>
       <CardHeader
         title="Recommended list for you"
-        subtitle="Built from your simulated chances at every profiled college. Prioritizes programs related to your major and affordable in-state options."
+        subtitle="Built from your estimated chances at every profiled college. Prioritizes programs related to your major and affordable in-state options."
         icon={<Compass size={16} />}
       />
       <div className="grid gap-px bg-line md:grid-cols-3">

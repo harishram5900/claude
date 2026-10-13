@@ -118,7 +118,7 @@ export default function TrackerPage() {
         <ListBuilder />
       </div>
       {tracker.length === 0 ? (
-        <Empty icon={<ClipboardList size={22} />} title="Your list is empty" body="Add colleges above, or from any college page or the simulator." action={<Link href="/colleges" className="text-sm font-medium text-brand"><Plus size={14} className="inline" /> Browse colleges</Link>} />
+        <Empty icon={<ClipboardList size={22} />} title="Your list is empty" body="Add colleges above, from any college page, or from your evaluation." action={<Link href="/colleges" className="text-sm font-medium text-brand"><Plus size={14} className="inline" /> Browse colleges</Link>} />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
           {sorted.map((e) => (

@@ -15,7 +15,8 @@ const BACKGROUND: [string, string][] = [
   ["rural", "Rural community"],
   ["single_parent_household", "Single-parent household"],
   ["english_learner", "English learner"],
-  ["women", "Woman / girl in STEM"],
+  ["women", "Woman / girl"],
+  ["nonbinary", "Nonbinary or genderqueer"],
 ];
 
 const TIES: [string, string][] = [

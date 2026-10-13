@@ -78,6 +78,7 @@ export function Nav() {
   const [open, setOpen] = useState(false);
   const { ready, user, accountsAvailable } = useStore();
   useEffect(() => setOpen(false), [path]);
+  if (path === "/") return null; // the landing page has its own floating nav
   if (path === "/start") {
     return (
       <header className="border-b border-line bg-bg/80 backdrop-blur-xl print:hidden">

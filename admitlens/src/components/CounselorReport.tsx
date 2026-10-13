@@ -222,7 +222,7 @@ export function CounselorReport({ ev, profile }: { ev: Evaluation; profile: Prof
 
       {/* Improvements */}
       <Card>
-        <CardHeader title="How to raise your chances here" subtitle="Each change is re-simulated against this college. Gains are what the model predicts, not guarantees." icon={<TrendingUp size={16} />} />
+        <CardHeader title="How to raise your chances here" subtitle="Each change is re-scored against this college. Gains are estimates, not guarantees." icon={<TrendingUp size={16} />} />
         <div className="grid gap-3 p-5 md:grid-cols-2">
           {ev.improvements.length === 0 && <p className="text-sm text-muted">You've maxed out what the model can measure. The rest is execution: polish every supplement.</p>}
           {ev.improvements.map((im) => (

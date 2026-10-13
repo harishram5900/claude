@@ -23,14 +23,18 @@ export default function RoadmapPage() {
   const { profile, dreamCollege, setDreamCollege, roadmapDone, toggleRoadmap, ready } = useStore();
   const { college } = useCollege(dreamCollege);
   const [filter, setFilter] = useState<Track | "All" | "Priority">("All");
+  const [showPast, setShowPast] = useState(false);
   const now = currentPhase(profile.grade);
   const items = useMemo(() => buildRoadmap(profile, college), [profile, college]);
   const ev = useMemo(() => (college ? evaluate(profile, college) : null), [profile, college]);
   const chance = ev?.chance ?? null;
   if (!ready) return null;
 
-  const shown = items.filter((m) => filter === "All" || (filter === "Priority" ? m.priority : m.track === filter));
-  const done = items.filter((m) => roadmapDone[m.id]).length;
+  // Earlier grades are hidden by default: a senior shouldn't scroll past four years of history first.
+  const pastCount = items.filter((m) => m.order < now).length;
+  const ahead = items.filter((m) => m.order >= now);
+  const shown = items.filter((m) => (showPast || m.order >= now) && (filter === "All" || (filter === "Priority" ? m.priority : m.track === filter)));
+  const done = ahead.filter((m) => roadmapDone[m.id]).length;
   const phases = PHASES.map((p, i) => ({ p, i, items: shown.filter((m) => m.order === i) })).filter((x) => x.items.length > 0);
 
   return (
@@ -56,9 +60,9 @@ export default function RoadmapPage() {
         <Card className="p-5">
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">Progress</span>
-            <span className="tabular-nums text-muted">{done}/{items.length}</span>
+            <span className="tabular-nums text-muted">{done}/{ahead.length}</span>
           </div>
-          <Progress value={(done / items.length) * 100} className="mt-2" tone="good" />
+          <Progress value={ahead.length ? (done / ahead.length) * 100 : 0} className="mt-2" tone="good" />
           {college && chance != null && (
             <div className="mt-4 flex items-center justify-between rounded-xl bg-surface-2 p-3">
               <div className="text-sm">
@@ -77,7 +81,7 @@ export default function RoadmapPage() {
           <div className="border-b border-line px-6 py-4">
             <div className="eyebrow">Game plan</div>
             <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight">Your three biggest levers for {college.short}</h2>
-            <p className="text-sm text-muted">Each is re-simulated against {college.short}'s reader, so the gains reflect this school's priorities.</p>
+            <p className="text-sm text-muted">Each is re-scored against {college.short}'s reader, so the gains reflect this school's priorities.</p>
           </div>
           <div className="grid gap-px bg-line md:grid-cols-3">
             {ev.improvements.slice(0, 3).map((im, i) => (
@@ -93,6 +97,14 @@ export default function RoadmapPage() {
             ))}
           </div>
         </Card>
+      )}
+
+      {pastCount > 0 && (
+        <div className="mb-8 flex justify-center">
+          <button onClick={() => setShowPast((v) => !v)} className="rounded-full border border-line bg-surface px-4 py-2 text-sm text-muted transition hover:text-ink">
+            {showPast ? "Hide earlier grades" : `Show earlier grades (${pastCount} milestones)`}
+          </button>
+        </div>
       )}
 
       {/* The map */}

@@ -60,7 +60,7 @@ export default function Report() {
     needsReview: results.filter((x) => x.review.length).length,
   };
   useEffect(() => {
-    document.title = `GrantScout · ${f.fp.name || "student"} · ${new Date().toISOString().slice(0, 10)}`;
+    document.title = `AdmitLens scholarships · ${f.fp.name || "student"} · ${new Date().toISOString().slice(0, 10)}`;
   }, [f.fp.name]);
   if (!ready) return null;
   const today = new Date().toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
@@ -89,7 +89,7 @@ export default function Report() {
       )}
 
       <h1 className="font-display text-3xl font-semibold">Funding opportunities for {f.fp.name || "you"}</h1>
-      <p className="mt-1 text-sm text-[#676a62]">{place && `${place} · `}grade {f.fp.grade} · generated {today} · by GrantScout in AdmitLens</p>
+      <p className="mt-1 text-sm text-[#676a62]">{place && `${place} · `}grade {f.fp.grade} · generated {today} · by AdmitLens</p>
 
       <div className="mt-5 grid grid-cols-4 overflow-hidden rounded-md border border-[#1d5a46] text-center">
         {[["Opportunities", String(f.results.length)], ["Listed value (approx.)", `$${Math.round(f.totalValue).toLocaleString()}`], ["Expected value*", `$${Math.round(f.totalEv).toLocaleString()}`], ["Need a closer look", String(f.needsReview)]].map(([l, v]) => (
@@ -134,7 +134,7 @@ export default function Report() {
           ))}
         </div>
       </section>
-      <p className="mt-8 border-t border-[#e4ddcd] pt-2 text-[10px] text-[#676a62]">GrantScout in AdmitLens · verify every listing on the sponsor's site · amounts and deadlines change each cycle.</p>
+      <p className="mt-8 border-t border-[#e4ddcd] pt-2 text-[10px] text-[#676a62]">AdmitLens scholarships · verify every listing on the sponsor's site · amounts and deadlines change each cycle.</p>
     </div>
   );
 }

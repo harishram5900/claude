@@ -48,7 +48,7 @@ export default function FundingPage() {
   return (
     <div className="rise">
       <PageHeader
-        eyebrow="GrantScout · funding finder"
+        eyebrow="Scholarships & funding"
         title="Money you can actually win"
         subtitle="Scholarships, grants, fellowships, paid internships, funded programs and competitions, filtered to what you're eligible for (including citizenship and immigration status), sorted closest first, and ranked by your real odds."
         action={
@@ -162,7 +162,7 @@ export default function FundingPage() {
         <div className="space-y-6">
           <Card className="p-5">
             <h3 className="font-display text-lg font-semibold">Ring coverage</h3>
-            <p className="mt-1 text-sm text-muted">GrantScout aims for these minimums in each ring. Local awards aren't in any national database, so the closest rings need a short search on sponsors' own sites.</p>
+            <p className="mt-1 text-sm text-muted">AdmitLens aims for these minimums at each distance from home. Local awards aren't in any national database, so the closest rings need a short search on sponsors' own sites.</p>
             <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               {RINGS.filter(([r]) => r !== 6).map(([r, n]) => (
                 <div key={r} className={cx("rounded-xl border p-3", f.thinRings.includes(r) ? "border-warn/40 bg-warn-soft/40" : "border-line")}>

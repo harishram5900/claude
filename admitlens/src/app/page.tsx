@@ -1,114 +1,113 @@
-import { ArrowRight, ArrowUpRight, ClipboardList, FileUp, GraduationCap, Library, Map, PenLine, Trophy } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, FileUp, GraduationCap, Map, PenLine, Trophy } from "lucide-react";
 import Link from "next/link";
-import { ButtonLink, Card } from "@/components/ui";
-import { COLLEGES, getCollege } from "@/data/colleges";
-import { RESOURCES } from "@/data/resources";
+import { ImportDemo } from "@/components/landing/ImportDemo";
+import { LandingNav } from "@/components/landing/LandingNav";
+import { PauseToggle } from "@/components/landing/PauseToggle";
+import { Phone, Ring } from "@/components/landing/Phone";
+import { PrivacyPanel } from "@/components/landing/PrivacyPanel";
+import { ReadersCarousel } from "@/components/landing/ReadersCarousel";
+import { Reveal } from "@/components/landing/Reveal";
+import { EvalScreen, ImportScreen, NoteScreen, RetryScreen, RoadmapScreen, ScholarshipScreen } from "@/components/landing/Screens";
+import { COLLEGES } from "@/data/colleges";
 import { FUNDING_LIBRARY } from "@/data/funding";
-import { collegeSatRange, tierOf, TIER_INFO } from "@/lib/engine";
+import { RESOURCES } from "@/data/resources";
+import { landingData } from "@/lib/landing";
 
-const FEATURES = [
-  { icon: GraduationCap, title: "Admissions evaluation", body: "An admissions reader for the college you choose rates your academics, activities, honors and essay from 1 to 6, gives your odds and explains exactly how your file would be reviewed.", href: "/evaluate" },
-  { icon: PenLine, title: "Essay Lab", body: "Live feedback on voice, specificity, structure and reflection, plus checks for 'why us' essays that could describe any school.", href: "/essays" },
-  { icon: Map, title: "Roadmap", body: "A grade-by-grade plan to your dream school, prioritized by the gaps its readers would flag.", href: "/roadmap" },
-  { icon: ClipboardList, title: "List builder & tracker", body: "A balanced list of reaches, targets and likely schools, with deadlines and checklists filled in.", href: "/tracker" },
-  { icon: Trophy, title: "GrantScout funding finder", body: "Scholarships, grants, fellowships and paid programs filtered by your citizenship status, grade and location, sorted closest first and ranked by your odds.", href: "/scholarships" },
-  { icon: Library, title: "Learn from real admits", body: "Essays and blogs by admitted students, published on the colleges' own sites.", href: "/learn" },
+// Example screens are computed by the real engines; refresh daily so scholarship deadlines stay current.
+export const revalidate = 86400;
+
+const pct = (x: number) => `${Math.round(x * 100)}%`;
+
+const FAQ: [string, string][] = [
+  ["How accurate are the chances?", "They're estimates from a transparent model, not predictions. Each college is anchored to its real admit rate, test ranges and typical GPA, and the most selective end is fitted to real outcomes from Harvard's admissions data released in SFFA v. Harvard. Nobody outside a college can see the rest of the applicant pool, so use your evaluation to find your biggest levers."],
+  ["Does it connect to my Common App account?", "Common App doesn't let outside apps sign in to student accounts. Download your application PDF from Common App's Preview and upload it. AdmitLens reads it in your browser, skips the watermark, page numbers and headers, and fills in your profile. You confirm every field."],
+  ["Why do you ask about citizenship or visa status?", "Many scholarships are limited to citizens, permanent residents or specific statuses. Your answer only hides awards you can't receive. It's optional, and it never appears in a report or PDF."],
+  ["Is AdmitLens free?", "Yes. There's nothing to buy and no premium tier."],
+  ["Will it write my essays?", "No. It shows what's working and what isn't, line by line, and how a revision changes your odds. The words stay yours, which is what colleges expect."],
+  ["Which colleges can I be evaluated for?", `${COLLEGES.length} colleges are profiled in depth, and any of the 6,000+ U.S. colleges in the Department of Education's College Scorecard can be searched and evaluated.`],
+  ["I'm not a senior yet. Is this for me?", "Yes. 9th to 11th graders get a grade-by-grade roadmap built from what their dream school's readers look for, plus scholarships they can start on now."],
 ];
 
-const FAQ = [
-  {
-    q: "How accurate are the chances?",
-    a: "They're estimates from a transparent model, not predictions. Each college is anchored to its real admit rate, test ranges and typical GPA. The most selective end is fitted to real outcomes from Harvard's admissions data released in SFFA v. Harvard, where the model matches actual admit rates for every academic decile to within about 20%. No outside tool can see the rest of the applicant pool or a school's institutional needs, so use AdmitLens to find your biggest levers, not to forecast your fate.",
-  },
-  {
-    q: "Does it connect to my Common App account?",
-    a: "Common App doesn't let outside apps sign in to student accounts. Instead, download your application PDF from Common App's Preview and upload it. AdmitLens reads it in your browser, skips page headers, watermarks and page numbers, fills in your profile and shows you every field to confirm.",
-  },
-  {
-    q: "Where does my information go?",
-    a: "Your profile, essays and tracker are saved to your private AdmitLens account (passwords are hashed, data is in private storage) so you can sign in from any device. Your citizenship or visa answer is used only to filter scholarships and never appears in reports. Nothing is sold or shared.",
-  },
-  {
-    q: "Will it write my essays?",
-    a: "No. AdmitLens points out what's working and what isn't, line by line, but the words stay yours. Colleges expect your own writing.",
-  },
-];
+const PRIVACY = ["Your PDF is read in your browser and never uploaded", "Your visa answer only filters scholarships", "Passwords are hashed; sessions are signed", "Nothing is sold, shared or used for ads"];
 
-function ReaderCard() {
-  const pair = ["harvard", "uic"].map((id) => getCollege(id)!);
+function SectionHead({ eyebrow, title, body, center = false, onIvy = false }: { eyebrow: string; title: React.ReactNode; body?: string; center?: boolean; onIvy?: boolean }) {
   return (
-    <div className="relative">
-      <div className="absolute -inset-x-6 -bottom-6 top-10 -z-10 rotate-2 rounded-[28px] border border-line bg-surface-2/70" aria-hidden />
-      <Card className="paper overflow-hidden rounded-[24px]">
-        <div className="border-b border-line px-6 py-4">
-          <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">Two offices, two standards</div>
-          <div className="font-display text-lg font-semibold">What each reader holds your file to</div>
-        </div>
-        <div className="grid grid-cols-2 divide-x divide-line">
-          {pair.map((c) => {
-            const t = tierOf(c);
-            const [lo, hi] = collegeSatRange(c);
-            return (
-              <div key={c.id} className="space-y-3 px-5 py-5">
-                <div className="font-display text-xl font-semibold">{c.short}</div>
-                <div>
-                  <div className="font-display text-3xl font-semibold tabular-nums">{(c.admitRate * 100).toFixed(c.admitRate < 0.1 ? 1 : 0)}%</div>
-                  <div className="text-[11px] text-muted">admit rate</div>
-                </div>
-                <div className="text-sm">
-                  <div className="flex justify-between gap-2"><span className="text-muted">SAT mid-50%</span><span className="tabular-nums">{lo}–{hi}</span></div>
-                  <div className="flex justify-between gap-2"><span className="text-muted">Typical GPA</span><span className="tabular-nums">{c.gpa.toFixed(2)}</span></div>
-                </div>
-                <p className="text-xs italic leading-relaxed text-muted">“{TIER_INFO[t].stance.split(". ")[0]}.”</p>
-              </div>
-            );
-          })}
-        </div>
-        <div className="border-t border-line bg-surface-2/60 px-6 py-3 text-xs text-muted">Published admissions data. Your evaluation uses the college you pick.</div>
-      </Card>
+    <div className={center ? "mx-auto max-w-2xl text-center" : "max-w-xl"}>
+      <div className={`eyebrow ${onIvy ? "!text-[#e0b65a]" : ""}`}>{eyebrow}</div>
+      <h2 className="font-display mt-4 text-4xl font-medium leading-[1.05] tracking-tight sm:text-5xl">{title}</h2>
+      {body && <p className={`mt-4 text-[17px] leading-relaxed ${onIvy ? "text-[#f5f2ea]/75" : "text-muted"}`}>{body}</p>}
     </div>
   );
 }
 
 export default function Home() {
-  const demo = ["harvard", "umich", "uiuc", "uic"].map((id) => getCollege(id)!);
+  const d = landingData();
   const verified = COLLEGES.filter((c) => c.verified).length;
-  return (
-    <div className="space-y-28">
-      {/* Hero */}
-      <section className="relative -mx-4 -mt-8 px-4 pt-14 sm:-mx-6 sm:-mt-10 sm:px-6 sm:pt-20">
-        <div className="grid-bg absolute inset-0 opacity-50 [mask-image:radial-gradient(60%_60%_at_30%_30%,black,transparent)]" aria-hidden />
-        <div className="relative grid items-center gap-14 lg:grid-cols-[1.15fr_1fr]">
-          <div className="rise">
-            <div className="eyebrow">College admissions, read from the other side of the desk</div>
-            <h1 className="mt-6 font-display text-5xl font-medium leading-[1.02] tracking-tight sm:text-7xl">
-              Know how your application <em className="text-brand">reads</em> before anyone else does.
-            </h1>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
-              A reader at Harvard and a reader at UIC hold your file to different standards. AdmitLens reads your application the way the college you choose would: what they'd rate, what they'd question, and exactly what would change their mind. Then it finds the scholarships you actually qualify for.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <ButtonLink href="/start" className="px-5 py-3 text-[15px]">
-                Get started <ArrowRight size={17} />
-              </ButtonLink>
-              <ButtonLink href="/signin" variant="secondary" className="px-5 py-3 text-[15px]">
-                I have an account
-              </ButtonLink>
-            </div>
-            <p className="mt-5 flex items-center gap-1.5 text-xs text-muted"><FileUp size={13} /> Free · a 1-minute questionnaire, then upload your Common App PDF and we fill in the rest</p>
-          </div>
-          <div className="rise lg:pl-6">
-            <ReaderCard />
-          </div>
-        </div>
+  const steps = [
+    { n: "01", title: "Upload your Common App", body: "Your grades, scores, activities, honors and essay fill in by themselves. You confirm each field.", screen: <ImportScreen />, tone: "ivy" as const, tint: "lp-tint-navy" },
+    { n: "02", title: "Pick your dream college", body: "Its admissions reader rates every part of your file from 1 to 6 against that school's admitted students.", screen: <EvalScreen d={d} />, tone: "paper" as const, tint: "lp-tint-brand" },
+    { n: "03", title: "Get the first fix", body: "Every evaluation ends with the one change worth the most points, taken from your own file.", screen: <NoteScreen d={d} />, tone: "paper" as const, tint: "lp-tint-accent" },
+    { n: "04", title: "Revise and re-score", body: "Change something and every number is re-read against the same college, so you see what it was worth.", screen: <RetryScreen d={d} />, tone: "paper" as const, tint: "lp-tint-brand" },
+  ];
+  const grades = [
+    { icon: GraduationCap, tag: "Seniors", title: "Know where you stand before you submit.", body: "A written evaluation from the college you choose: how its office would review your file, your ratings, your odds and what to fix first.", screen: <EvalScreen d={d} />, tone: "paper" as const, tint: "lp-tint-brand", href: "/start" },
+    { icon: Trophy, tag: "Scholarships", title: "Money you're actually eligible for.", body: `Matched to your GPA, state, grade and citizenship or visa status, closest to home first. The example on this screen qualifies for ${d.scholarshipCount} of ${FUNDING_LIBRARY.length} programs.`, screen: <ScholarshipScreen d={d} />, tone: "paper" as const, tint: "lp-tint-accent", href: "/start" },
+    { icon: Map, tag: "9th to 11th grade", title: "A plan for every semester left.", body: "A grade-by-grade roadmap, prioritized by what your dream school's readers would flag in your file today.", screen: <RoadmapScreen d={d} />, tone: "ivy" as const, tint: "lp-tint-navy", href: "/start" },
+    { icon: PenLine, tag: "Essays", title: "Feedback on every draft.", body: "Line-by-line notes on voice, specificity and reflection, plus how each revision changes your chances.", screen: <RetryScreen d={d} />, tone: "paper" as const, tint: "lp-tint-brand", href: "/start" },
+  ];
 
-        {/* Honest proof strip */}
-        <div className="relative mt-20 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-4">
+  return (
+    <div className="overflow-x-clip">
+      <LandingNav />
+
+      {/* Hero */}
+      <section className="relative px-4 pb-16 pt-32 sm:px-6 sm:pt-40">
+        <div className="grid-bg absolute inset-0 opacity-50 [mask-image:radial-gradient(60%_55%_at_50%_25%,black,transparent)]" aria-hidden />
+        <Reveal className="relative mx-auto max-w-4xl text-center">
+          <div className="eyebrow">College admissions, read from the other side of the desk</div>
+          <h1 className="font-display mt-6 text-5xl font-medium leading-[1.02] tracking-tight sm:text-7xl">
+            Know how your application <em className="text-brand">reads</em> before anyone else does.
+          </h1>
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted">
+            A reader at Harvard and a reader at UIC hold your file to different standards. AdmitLens evaluates you the way the college you choose would, then finds the scholarships you actually qualify for.
+          </p>
+          <div className="mt-9 flex flex-wrap justify-center gap-3">
+            <Link href="/start" className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3.5 text-[15px] font-medium text-[var(--surface)] shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] transition hover:brightness-110">
+              <FileUp size={17} /> Get started free
+            </Link>
+            <Link href="/signin" className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-6 py-3.5 text-[15px] font-medium transition hover:bg-surface-2">
+              I have an account
+            </Link>
+          </div>
+        </Reveal>
+
+        <Reveal delay={150} className="relative mx-auto mt-16 max-w-5xl">
+          <div className="lp-ivy relative h-[520px] overflow-hidden rounded-[2.25rem] shadow-card sm:h-[580px]">
+            <div className="grid-bg absolute inset-0 opacity-20" aria-hidden />
+            <div className="absolute inset-x-0 top-12 flex justify-center">
+              <Phone tone="paper">
+                <EvalScreen d={d} />
+              </Phone>
+            </div>
+            <div className="lp-on-ivy absolute left-8 top-16 hidden max-w-[240px] rounded-2xl p-4 backdrop-blur md:block">
+              <div className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[#e0b65a]">In committee</div>
+              <p className="font-display mt-1.5 text-[17px] italic leading-snug">{d.mich.committee}</p>
+            </div>
+            <div className="lp-on-ivy absolute bottom-14 right-8 hidden w-[230px] rounded-2xl p-4 backdrop-blur md:block">
+              <div className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[#e0b65a]">Same file at {d.harvard.short}</div>
+              <div className="font-display mt-1 text-3xl font-semibold">{pct(d.harvard.after)}</div>
+              <div className="text-xs text-[#f5f2ea]/70">{d.harvard.decision}</div>
+            </div>
+          </div>
+          <p className="mt-3 text-center text-xs text-muted">Example screens. Every number is computed by AdmitLens for an example application.</p>
+        </Reveal>
+
+        <div className="relative mx-auto mt-14 grid max-w-5xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-4">
           {[
-            [String(COLLEGES.length), "colleges profiled in depth", `${verified} checked against their latest reported cycle`],
-            ["6,000+", "colleges searchable live", "U.S. Dept. of Education College Scorecard"],
-            [String(FUNDING_LIBRARY.length), "funding programs screened", "filtered by status, grade and location"],
-            ["0", "data sold or shared", "your account is private to you"],
+            [String(COLLEGES.length), "colleges profiled in depth", `${verified} checked against their latest cycle`],
+            ["6,000+", "colleges searchable live", "U.S. Dept. of Education data"],
+            [String(FUNDING_LIBRARY.length), "funding programs screened", "by status, grade and location"],
+            ["$0", "to use", "no premium tier"],
           ].map(([n, l, s]) => (
             <div key={l} className="bg-surface px-5 py-5">
               <div className="font-display text-3xl font-semibold tabular-nums">{n}</div>
@@ -119,143 +118,204 @@ export default function Home() {
         </div>
       </section>
 
-      {/* The bar moves */}
-      <section>
-        <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-          <div className="max-w-xl">
-            <div className="eyebrow">Four colleges, four standards</div>
-            <h2 className="mt-3 font-display text-4xl font-medium tracking-tight">The bar moves with the college.</h2>
-          </div>
-          <p className="max-w-md text-sm text-muted">
-            Your evaluation is calibrated to each school's real admit rate, score ranges and priorities, so the same file can rate a 1 at one college and a 4 at another.
-          </p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {demo.map((c) => {
-            const [lo, hi] = collegeSatRange(c);
-            return (
-              <Link key={c.id} href={`/colleges/${c.id}`} className="group">
-                <Card className="h-full p-5 transition group-hover:-translate-y-0.5 group-hover:border-brand">
-                  <div className="flex items-baseline justify-between">
-                    <div className="font-display text-xl font-semibold">{c.short}</div>
-                    <div className="font-mono text-[11px] text-muted">{TIER_INFO[tierOf(c)].label.split(" (")[0]}</div>
-                  </div>
-                  <div className="mt-6 flex items-end justify-between">
-                    <div>
-                      <div className="font-display text-5xl font-medium tabular-nums">{(c.admitRate * 100).toFixed(c.admitRate < 0.1 ? 1 : 0)}%</div>
-                      <div className="text-xs text-muted">admit rate</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-display text-lg font-semibold tabular-nums">{lo}–{hi}</div>
-                      <div className="text-xs text-muted">SAT middle 50%</div>
-                    </div>
-                  </div>
-                  <div className="rule my-4" />
-                  <p className="line-clamp-3 text-xs italic leading-relaxed text-muted">“{TIER_INFO[tierOf(c)].stance}”</p>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
       {/* How it works */}
-      <section className="grid gap-12 lg:grid-cols-[1fr_1.4fr]">
-        <div>
-          <div className="eyebrow">How it works</div>
-          <h2 className="mt-3 font-display text-4xl font-medium tracking-tight">Four steps, about five minutes.</h2>
-          <p className="mt-4 text-muted">One saved profile powers every tool, so you never type the same thing twice.</p>
+      <section id="how" className="scroll-mt-24 px-4 py-20 sm:px-6 sm:py-28">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+            <SectionHead eyebrow="How it works" title="From PDF to plan in four steps." body="One saved profile powers everything, so you never type the same thing twice." />
+            <PauseToggle target="steps" />
+          </div>
+          <div id="steps" className="mt-12 grid gap-5 md:grid-cols-2">
+            {steps.map((s, i) => (
+              <Reveal key={s.n} delay={(i % 2) * 100} className="overflow-hidden rounded-[1.75rem] border border-line bg-surface shadow-card">
+                <div className={`${s.tint} relative flex h-[400px] justify-center overflow-hidden pt-8`}>
+                  <Phone tone={s.tone}>{s.screen}</Phone>
+                </div>
+                <div className="flex gap-4 border-t border-line p-6">
+                  <span className="font-mono text-sm text-accent">{s.n}</span>
+                  <div>
+                    <h3 className="font-display text-2xl font-semibold tracking-tight">{s.title}</h3>
+                    <p className="mt-1.5 text-[15px] leading-relaxed text-muted">{s.body}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
         </div>
-        <ol className="space-y-px overflow-hidden rounded-2xl border border-line bg-line">
-          {[
-            ["Answer a few questions", "Your name, grade, what you need help with, and (optionally) your citizenship or visa status so we only show scholarships you can actually win."],
-            ["Create your account", "Everything you enter is saved to your account, so you can pick up on any device."],
-            ["Upload your Common App", "We read the PDF from Common App's Preview and fill in your grades, scores, activities, honors and essay. You confirm it before it's saved."],
-            ["Get your evaluation", "Pick your dream college. Its admissions reader rates every part of your file, gives your odds, writes how your application would be reviewed, and shows what to fix first."],
-          ].map(([t, b], i) => (
-            <li key={t} className="flex gap-5 bg-surface p-6">
-              <span className="font-mono text-sm text-accent">0{i + 1}</span>
-              <div>
-                <div className="font-display text-lg font-semibold">{t}</div>
-                <p className="mt-1 text-sm text-muted">{b}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
       </section>
 
-      {/* Features */}
-      <section>
-        <div className="mb-8 max-w-xl">
-          <div className="eyebrow">Everything in one place</div>
-          <h2 className="mt-3 font-display text-4xl font-medium tracking-tight">From freshman year to decision day.</h2>
+      {/* Deep dives */}
+      <section className="px-4 sm:px-6">
+        <div className="mx-auto max-w-6xl space-y-6">
+          <Reveal className="paper grid items-center gap-10 overflow-hidden rounded-[2rem] border border-line p-6 shadow-card sm:p-12 lg:grid-cols-[0.95fr_1.05fr]">
+            <SectionHead eyebrow="Common App import" title="Only your answers make it in." body="The printout adds a watermark, page numbers, running headers, a print stamp and the full prompt list. AdmitLens keeps your real answers and leaves the rest behind." />
+            <ImportDemo />
+          </Reveal>
+
+          <Reveal className="lp-ivy grid items-center gap-10 overflow-hidden rounded-[2rem] p-6 shadow-card sm:p-12 lg:grid-cols-[0.95fr_1.05fr]">
+            <SectionHead onIvy eyebrow="The evaluation" title="Ratings, reasons and a written review." body="Academics, rigor, testing, activities, honors and essay are each rated against the college you pick. Then you get a full paragraph on how that office would review your file, and the change worth the most." />
+            <div className="rounded-[1.75rem] bg-surface p-6 text-ink shadow-card sm:p-7">
+              <div className="flex flex-col items-center gap-6 sm:flex-row">
+                <Ring value={d.mich.chance} label={pct(d.mich.chance)} sub={`at ${d.mich.short}`} size={140} />
+                <div className="min-w-0">
+                  <div className="eyebrow">Likely outcome</div>
+                  <div className="font-display mt-2 text-xl font-semibold leading-snug">{d.mich.decision}</div>
+                  <p className="mt-2 text-sm text-muted">{d.mich.committee.replace(/"/g, "")}</p>
+                </div>
+              </div>
+              <div className="rule my-5" />
+              <div className="flex items-start gap-3 rounded-xl bg-brand-soft/60 p-3.5 text-sm">
+                <ArrowUpRight size={16} className="mt-0.5 shrink-0 text-brand" />
+                <span>
+                  <b>Biggest lever:</b> {d.mich.improvement?.title.toLowerCase() ?? "revise your personal statement"}
+                  {d.mich.improvement && <span className="text-good"> (+{d.mich.improvement.gain.toFixed(1)} pts)</span>}
+                </span>
+              </div>
+            </div>
+          </Reveal>
+
+          <Reveal className="paper grid items-center gap-10 overflow-hidden rounded-[2rem] border border-line p-6 shadow-card sm:p-12 lg:grid-cols-[0.95fr_1.05fr]">
+            <SectionHead eyebrow="Revise and re-score" title="See what a revision is worth." body="The example essay below went from a cliché-heavy first draft to a specific second one. Same student, same college, re-read." />
+            <div className="overflow-hidden rounded-2xl border border-line bg-surface">
+              <div className="grid grid-cols-[1fr_auto_auto] gap-x-6 border-b border-line bg-surface-2/60 px-5 py-3 text-xs font-medium text-muted">
+                <span />
+                <span className="w-14 text-right">Draft 1</span>
+                <span className="w-14 text-right text-brand">Draft 2</span>
+              </div>
+              {[
+                ["Essay score", String(d.draft1.score), String(d.draft2.score)],
+                ["Essay grade", d.draft1.grade, d.draft2.grade],
+                ["Specificity", String(d.draft1.specificity), String(d.draft2.specificity)],
+                [`Chance at ${d.mich.short}`, pct(d.mich.before), pct(d.mich.chance)],
+                [`Chance at ${d.harvard.short}`, pct(d.harvard.before), pct(d.harvard.after)],
+              ].map(([l, a, b]) => (
+                <div key={l} className="grid grid-cols-[1fr_auto_auto] items-center gap-x-6 border-b border-line px-5 py-4 last:border-0">
+                  <span className="text-[15px]">{l}</span>
+                  <span className="w-14 text-right font-display text-xl tabular-nums text-muted line-through decoration-1">{a}</span>
+                  <span className="w-14 text-right font-display text-2xl font-semibold tabular-nums text-good">{b}</span>
+                </div>
+              ))}
+            </div>
+          </Reveal>
         </div>
-        <div className="grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((f) => (
-            <Link key={f.title} href={f.href} className="group bg-surface p-7 transition hover:bg-surface-2/60">
-              <f.icon size={20} className="text-brand" />
-              <h3 className="mt-5 flex items-center gap-1 font-display text-xl font-semibold">
-                {f.title} <ArrowUpRight size={16} className="text-muted opacity-0 transition group-hover:opacity-100" />
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted">{f.body}</p>
-            </Link>
-          ))}
+      </section>
+
+      {/* Different readers */}
+      <section className="px-4 py-20 sm:px-6 sm:py-28">
+        <div className="mx-auto max-w-6xl">
+          <Reveal>
+            <SectionHead eyebrow="Same file, four readers" title="The bar moves with the college." body="One application, read by four offices. Each is calibrated to that school's real admit rate, score ranges and stated priorities." />
+          </Reveal>
+          <div className="mt-10">
+            <ReadersCarousel readers={d.readers} />
+          </div>
         </div>
+      </section>
+
+      {/* For every grade */}
+      <section id="grades" className="scroll-mt-24 border-y border-line bg-surface-2/40 px-4 py-20 sm:px-6 sm:py-28">
+        <div className="mx-auto max-w-6xl">
+          <Reveal>
+            <SectionHead center eyebrow="For every grade" title="From freshman year to decision day." body="The evaluation, the money and the plan, wherever you are in high school." />
+          </Reveal>
+          <div className="mt-16 space-y-20">
+            {grades.map((g, i) => (
+              <Reveal key={g.tag} className="grid items-center gap-10 md:grid-cols-2 md:gap-16">
+                <div className={`${g.tint} relative flex h-[420px] justify-center overflow-hidden rounded-[1.75rem] border border-line pt-12 sm:h-[480px] ${i % 2 ? "md:order-2" : ""}`}>
+                  <Phone tone={g.tone}>{g.screen}</Phone>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-medium text-brand">
+                    <g.icon size={17} /> {g.tag}
+                  </div>
+                  <h3 className="font-display mt-3 text-4xl font-medium leading-[1.08] tracking-tight sm:text-[2.75rem]">{g.title}</h3>
+                  <p className="mt-4 max-w-md text-[17px] leading-relaxed text-muted">{g.body}</p>
+                  <Link href={g.href} className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline">
+                    Start free <ArrowRight size={15} />
+                  </Link>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Privacy */}
+      <section id="privacy" className="scroll-mt-24 px-4 py-20 sm:px-6 sm:py-28">
+        <Reveal className="lp-ivy mx-auto grid max-w-6xl items-start gap-10 overflow-hidden rounded-[2rem] p-6 shadow-card sm:p-12 lg:grid-cols-2">
+          <div>
+            <SectionHead onIvy eyebrow="Your data" title="Private by design." body="Your application is personal. Here's exactly where each part of it goes." />
+            <ul className="mt-8 space-y-4">
+              {PRIVACY.map((p) => (
+                <li key={p} className="flex items-start gap-3 text-[16px]">
+                  <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#e0b65a] text-[#1d3b31]">
+                    <Check size={13} strokeWidth={3} />
+                  </span>
+                  {p}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <PrivacyPanel />
+        </Reveal>
       </section>
 
       {/* Real admits */}
-      <section className="grid gap-10 lg:grid-cols-[1fr_1.4fr]">
-        <div>
-          <div className="eyebrow">From students who got in</div>
-          <h2 className="mt-3 font-display text-4xl font-medium tracking-tight">Read the real thing.</h2>
-          <p className="mt-4 text-muted">
-            Colleges publish essays from admitted students and run blogs written by current undergrads. We collect the official ones in one place and link to the original pages.
-          </p>
-          <ButtonLink href="/learn" variant="secondary" className="mt-6">
-            Browse all resources <ArrowRight size={16} />
-          </ButtonLink>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {RESOURCES.filter((r) => r.kind === "Essays that worked" || r.kind === "Student blogs").slice(0, 4).map((r) => (
-            <a key={r.url} href={r.url} target="_blank" rel="noreferrer" className="group">
-              <Card className="h-full p-5 transition group-hover:border-brand">
-                <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.14em] text-muted">
-                  <span>{r.kind}</span>
-                  <ArrowUpRight size={14} className="transition group-hover:text-brand" />
-                </div>
-                <div className="mt-3 font-display text-lg font-semibold leading-snug">{r.title}</div>
-                <div className="text-sm text-brand">{r.publisher}</div>
-                <p className="mt-2 line-clamp-3 text-sm text-muted">{r.takeaway}</p>
-              </Card>
-            </a>
-          ))}
+      <section className="px-4 sm:px-6">
+        <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1fr_1.4fr]">
+          <Reveal>
+            <SectionHead eyebrow="From students who got in" title="Read the real thing." body="Colleges publish essays from admitted students and run blogs written by current undergrads. We collect the official ones and link to the originals." />
+            <Link href="/learn" className="mt-6 inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-2.5 text-sm font-medium transition hover:bg-surface-2">
+              Browse all resources <ArrowRight size={15} />
+            </Link>
+          </Reveal>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {RESOURCES.filter((r) => r.kind === "Essays that worked" || r.kind === "Student blogs")
+              .slice(0, 4)
+              .map((r) => (
+                <a key={r.url} href={r.url} target="_blank" rel="noreferrer" className="group rounded-2xl border border-line bg-surface p-5 shadow-card transition hover:border-brand">
+                  <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.14em] text-muted">
+                    <span>{r.kind}</span>
+                    <ArrowUpRight size={14} className="transition group-hover:text-brand" />
+                  </div>
+                  <div className="font-display mt-3 text-lg font-semibold leading-snug">{r.title}</div>
+                  <div className="text-sm text-brand">{r.publisher}</div>
+                </a>
+              ))}
+          </div>
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="mx-auto max-w-3xl">
-        <div className="eyebrow">Straight answers</div>
-        <h2 className="mt-3 font-display text-4xl font-medium tracking-tight">Questions students ask first</h2>
-        <div className="mt-8 divide-y divide-line border-y border-line">
-          {FAQ.map((f) => (
-            <details key={f.q} className="group py-5">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-display text-lg font-semibold">
-                {f.q}
-                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-line text-muted transition group-open:rotate-45">+</span>
-              </summary>
-              <p className="mt-3 text-[15px] leading-relaxed text-muted">{f.a}</p>
-            </details>
-          ))}
+      <section id="faq" className="scroll-mt-24 px-4 py-20 sm:px-6 sm:py-28">
+        <div className="mx-auto max-w-3xl">
+          <Reveal>
+            <SectionHead center eyebrow="Straight answers" title="Questions students ask first" />
+          </Reveal>
+          <div className="mt-10 divide-y divide-line border-y border-line">
+            {FAQ.map(([q, a]) => (
+              <details key={q} className="group py-5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-display text-lg font-semibold [&::-webkit-details-marker]:hidden">
+                  {q}
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-line text-muted transition group-open:rotate-45">+</span>
+                </summary>
+                <p className="mt-3 text-[15px] leading-relaxed text-muted">{a}</p>
+              </details>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="paper relative overflow-hidden rounded-[28px] border border-line px-8 py-16 text-center shadow-card">
-        <div className="eyebrow">Start here</div>
-        <h2 className="mx-auto mt-4 max-w-2xl font-display text-4xl font-medium tracking-tight sm:text-5xl">Your dream school is a plan, not a lottery ticket.</h2>
-        <p className="mx-auto mt-4 max-w-xl text-muted">A one-minute questionnaire, then thirty seconds with your Common App PDF.</p>
-        <ButtonLink href="/start" className="mt-8 px-6 py-3 text-[15px]">
-          Get started <ArrowRight size={17} />
-        </ButtonLink>
+      {/* Final CTA */}
+      <section className="px-4 pb-24 sm:px-6">
+        <Reveal className="paper relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] border border-line px-8 py-16 text-center shadow-card">
+          <div className="eyebrow">Start here</div>
+          <h2 className="font-display mx-auto mt-4 max-w-2xl text-4xl font-medium tracking-tight sm:text-5xl">Your dream school is a plan, not a lottery ticket.</h2>
+          <p className="mx-auto mt-4 max-w-xl text-muted">A one-minute questionnaire, then thirty seconds with your Common App PDF.</p>
+          <Link href="/start" className="mt-8 inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3.5 text-[15px] font-medium text-[var(--surface)] transition hover:brightness-110">
+            Get started free <ArrowRight size={17} />
+          </Link>
+        </Reveal>
       </section>
     </div>
   );

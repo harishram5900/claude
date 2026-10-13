@@ -9,6 +9,8 @@ import { guessDeadline } from "@/lib/deadline";
 import { useStore } from "@/lib/store";
 import { useCollege } from "@/lib/useCollege";
 
+const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
 export default function CollegeDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { college, loading } = useCollege(decodeURIComponent(id));
@@ -99,13 +101,13 @@ export default function CollegeDetail({ params }: { params: Promise<{ id: string
         <Card>
           <CardHeader title="What readers look for" icon={<Sparkles size={16} />} />
           <ul className="space-y-2 p-5 text-sm">
-            {college.values.map((v) => <li key={v} className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />{v}</li>)}
+            {college.values.map((v) => <li key={v} className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />{cap(v)}</li>)}
           </ul>
         </Card>
         <Card>
           <CardHeader title="Only-here resources" subtitle="Use these in your 'why us' essay" icon={<GraduationCap size={16} />} />
           <ul className="space-y-2 p-5 text-sm">
-            {college.knownFor.length ? college.knownFor.map((v) => <li key={v} className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-2" />{v}</li>) : <li className="text-muted">Research the official site for signature programs.</li>}
+            {college.knownFor.length ? college.knownFor.map((v) => <li key={v} className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-2" />{cap(v)}</li>) : <li className="text-muted">Research the official site for signature programs.</li>}
           </ul>
         </Card>
         <Card>
@@ -122,7 +124,7 @@ export default function CollegeDetail({ params }: { params: Promise<{ id: string
             {college.supplements.length > 0 && (
               <div>
                 <div className="mb-1 font-medium">Supplement themes</div>
-                <ul className="list-disc space-y-1 pl-5 text-muted">{college.supplements.map((s) => <li key={s}>{s}</li>)}</ul>
+                <ul className="list-disc space-y-1 pl-5 text-muted">{college.supplements.map((s) => <li key={s}>{cap(s)}</li>)}</ul>
               </div>
             )}
             <p className="text-xs text-muted">Deadlines and policies change each cycle. Confirm on the official site.</p>

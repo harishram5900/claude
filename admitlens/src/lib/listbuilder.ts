@@ -1,4 +1,4 @@
-// Suggests a balanced application list from the student's simulated chances.
+// Suggests a balanced application list from the student's estimated chances.
 // Counselors commonly recommend ~2–4 reaches, ~3–4 targets and ~2–3 likely schools,
 // with at least one likely school the family can afford.
 import { COLLEGES, type College } from "@/data/colleges";
@@ -12,13 +12,16 @@ export interface Suggestion {
   reasons: string[];
 }
 
+const GENERIC = new Set(["science", "sciences", "studies", "study", "arts", "general", "applied", "program", "major", "undecided", "and"]);
+
 /** Returns the college's signature program that relates to the student's major, if any. */
 function majorFit(c: College, major: string): string | null {
   if (!major) return null;
-  const keys = major.toLowerCase().split(/[^a-z]+/).filter((w) => w.length > 3);
+  // Generic words ("science", "studies") would match unrelated programs: Computer Science ≠ marine science.
+  const keys = major.toLowerCase().split(/[^a-z]+/).filter((w) => w.length > 3 && !GENERIC.has(w));
   const hit = (item: string) => {
     const hay = item.toLowerCase();
-    return keys.some((k) => hay.includes(k) || Object.entries(alias).some(([root, words]) => k.startsWith(root.slice(0, 5)) && words.some((w) => new RegExp(`\\b${w}\\b`).test(hay))));
+    return keys.some((k) => new RegExp(`\\b${k}`).test(hay) || Object.entries(alias).some(([root, words]) => k.startsWith(root.slice(0, 5)) && words.some((w) => new RegExp(`\\b${w}\\b`).test(hay))));
   };
   const alias: Record<string, string[]> = {
     computer: ["computing", "computer", "eecs", "cs"],

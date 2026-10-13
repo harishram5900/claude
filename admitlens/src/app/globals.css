@@ -144,3 +144,78 @@ body {
 
 .scroll-thin::-webkit-scrollbar { height: 6px; width: 6px; }
 .scroll-thin::-webkit-scrollbar-thumb { background: var(--border); border-radius: 9px; }
+
+/* ---------- Landing page (AdmitLens palette only) */
+.lp-ivy {
+  background:
+    radial-gradient(55% 60% at 85% 0%, color-mix(in oklab, var(--accent) 22%, transparent), transparent 70%),
+    linear-gradient(150deg, #1d5a46 0%, #1b4b50 55%, #23406b 100%);
+  color: #f5f2ea;
+}
+.dark .lp-ivy {
+  background:
+    radial-gradient(55% 60% at 85% 0%, color-mix(in oklab, var(--accent) 16%, transparent), transparent 70%),
+    linear-gradient(150deg, #133d30 0%, #143639 55%, #182c4b 100%);
+}
+.lp-on-ivy {
+  background: rgba(245, 242, 234, 0.07);
+  border: 1px solid rgba(245, 242, 234, 0.14);
+}
+.lp-screen-paper {
+  background: linear-gradient(180deg, color-mix(in oklab, var(--surface) 88%, var(--accent) 12%), var(--surface));
+  color: var(--text);
+}
+.lp-screen-ivy {
+  background: linear-gradient(170deg, #1d5a46, #1f4561 100%);
+  color: #f5f2ea;
+}
+.lp-tint-brand {
+  background: radial-gradient(70% 70% at 50% 100%, color-mix(in oklab, var(--brand) 22%, transparent), transparent 70%), var(--surface-2);
+}
+.lp-tint-accent {
+  background: radial-gradient(70% 70% at 50% 100%, color-mix(in oklab, var(--accent) 26%, transparent), transparent 70%), var(--surface-2);
+}
+.lp-tint-navy {
+  background: radial-gradient(70% 70% at 50% 100%, color-mix(in oklab, var(--brand-2) 24%, transparent), transparent 70%), var(--surface-2);
+}
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+.lp-ring {
+  transition: stroke-dashoffset 1.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.lp-tick {
+  opacity: 0.35;
+}
+.in .lp-tick {
+  animation: lp-tick 0.5s forwards;
+}
+@keyframes lp-tick {
+  to { opacity: 1; }
+}
+.lp-paused * {
+  animation-play-state: paused !important;
+}
+@keyframes lp-scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(400%); }
+}
+.lp-scan {
+  animation: lp-scan 2.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .lp-ring { transition: none; }
+  .lp-scan { animation: none; }
+  .in .lp-tick { animation: none; opacity: 1; }
+}
+.lp-noscroll::-webkit-scrollbar { display: none; }
+.lp-noscroll { scrollbar-width: none; }

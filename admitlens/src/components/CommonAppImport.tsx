@@ -26,6 +26,7 @@ const LABELS: Partial<Record<Key, string>> = {
   gpaWeighted: "Weighted GPA",
   classRankPercent: "Class rank (top %)",
   apCount: "AP / IB courses",
+  rigor: "Schedule rigor (estimate)",
   sat: "SAT",
   act: "ACT",
   activities: "Activities",
@@ -74,6 +75,7 @@ function describe(key: Key, v: unknown): React.ReactNode {
     return `${t.split(/\s+/).length} words: "${t.slice(0, 110)}…"`;
   }
   if (key === "classRankPercent") return `Top ${v}%`;
+  if (key === "rigor") return `${v === 5 ? "Most demanding" : "Strong"}. Adjust in Academics if your school offers more or fewer AP/IB courses.`;
   if (typeof v === "boolean") return v ? "Yes" : "No";
   return String(v);
 }

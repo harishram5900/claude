@@ -20,7 +20,7 @@ export function ResultCard({ x, rank }: { x: Ranked; rank?: number }) {
           {r.unclaimed_signal && <Badge tone="good">Often under-claimed</Badge>}
           {r.user_added && <Badge>Added by you</Badge>}
         </div>
-        <span className="font-mono text-[11px] text-muted" title="GrantScout priority score (0–100)">score {x.score}</span>
+        <span className="font-mono text-[11px] text-muted" title="Priority score (0–100): fit, odds and value">score {x.score}</span>
       </div>
       <a href={r.source_url} target="_blank" rel="noreferrer" className="group mt-2 flex items-start gap-1 font-display text-lg font-semibold leading-snug hover:text-brand">
         {r.name} <ArrowUpRight size={15} className="mt-1 shrink-0 text-muted group-hover:text-brand" />

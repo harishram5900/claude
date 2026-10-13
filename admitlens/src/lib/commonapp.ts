@@ -218,6 +218,9 @@ export function parseCommonApp(raw: string): ParseResult {
   if (apMatches.size) {
     profile.apCount = apMatches.size;
     found.push(`${apMatches.size} AP/IB courses`);
+    // Estimate how demanding the schedule is; the student can adjust it against what their school offers.
+    if (apMatches.size >= 7) profile.rigor = 5;
+    else if (apMatches.size >= 5) profile.rigor = 4;
   }
 
   // Honors: "Honors title: X Grade level: 11, 12 Level(s) of recognition: State, National"

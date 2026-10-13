@@ -1,12 +1,14 @@
 "use client";
-import { Award as AwardIcon, BookOpen, Plus, RotateCcw, Sparkles, Trash2, UserRound, Users } from "lucide-react";
+import { Award as AwardIcon, BookOpen, Plus, RotateCcw, ShieldCheck, Sparkles, Trash2, UserRound, Users } from "lucide-react";
+import Link from "next/link";
+import { STATUS_OPTIONS } from "@/lib/grantscout";
 import { Badge, Button, Card, CardHeader, cx, Field, inputCls, PageHeader, Progress } from "@/components/ui";
 import { CollegePicker } from "@/components/CollegePicker";
 import { getCollege } from "@/data/colleges";
 import { CommonAppImport } from "@/components/CommonAppImport";
 import { mergeImport } from "@/lib/commonapp";
 import { useStore } from "@/lib/store";
-import { STATES, type Activity, type Award, type Profile } from "@/lib/types";
+import { EMPTY_FUNDING, STATES, type Activity, type Award, type Profile } from "@/lib/types";
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 const numOrNull = (v: string) => (v.trim() === "" ? null : Number(v));
@@ -114,6 +116,25 @@ export default function ProfilePage() {
             <Field label="High school" className="sm:col-span-2">
               <input className={inputCls} value={p.highSchool} onChange={(e) => set("highSchool", e.target.value)} />
             </Field>
+          </div>
+        </Card>
+
+        <Card>
+          <CardHeader title="Scholarship eligibility" subtitle="Private. Used only to hide awards you can't receive; never shown in reports." icon={<ShieldCheck size={16} />} action={<Link href="/scholarships" className="text-sm text-brand">Full funding profile →</Link>} />
+          <div className="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4">
+            <Field label="Citizenship / visa status">
+              <select className={inputCls} value={p.funding?.residenceStatus ?? ""} onChange={(e) => setProfile((prev) => ({ ...prev, funding: { ...EMPTY_FUNDING, ...(prev.funding ?? {}), residenceStatus: e.target.value } }))}>
+                {STATUS_OPTIONS.map(([v, l]) => (
+                  <option key={v} value={v}>{l}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="City" hint="Finds local awards">
+              <input className={inputCls} value={p.funding?.city ?? ""} onChange={(e) => setProfile((prev) => ({ ...prev, funding: { ...EMPTY_FUNDING, ...(prev.funding ?? {}), city: e.target.value } }))} />
+            </Field>
+            <label className="flex items-center gap-2 self-end pb-2 text-sm">
+              <input type="checkbox" className="accent-[var(--brand)]" checked={!!p.funding?.hasWorkAuthorization} onChange={(e) => setProfile((prev) => ({ ...prev, funding: { ...EMPTY_FUNDING, ...(prev.funding ?? {}), hasWorkAuthorization: e.target.checked } }))} /> U.S. work authorization
+            </label>
           </div>
         </Card>
 
