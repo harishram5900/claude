@@ -1,14 +1,15 @@
 "use client";
 import { Award as AwardIcon, BookOpen, Plus, RotateCcw, ShieldCheck, Sparkles, Trash2, UserRound, Users } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { STATUS_OPTIONS } from "@/lib/grantscout";
 import { Badge, Button, Card, CardHeader, cx, Field, inputCls, PageHeader, Progress } from "@/components/ui";
 import { CollegePicker } from "@/components/CollegePicker";
 import { getCollege } from "@/data/colleges";
-import { CommonAppImport } from "@/components/CommonAppImport";
-import { mergeImport } from "@/lib/commonapp";
 import { useStore } from "@/lib/store";
 import { EMPTY_FUNDING, STATES, type Activity, type Award, type Profile } from "@/lib/types";
+
+const MAJORS = ["Computer Science", "Computer Engineering", "Electrical Engineering", "Mechanical Engineering", "Chemical Engineering", "Biomedical Engineering", "Civil Engineering", "Aerospace Engineering", "Data Science", "Mathematics", "Physics", "Chemistry", "Biology", "Neuroscience", "Nursing", "Public Health", "Economics", "Business", "Finance", "Accounting", "Marketing", "Political Science", "International Relations", "Psychology", "History", "English", "Journalism", "Communication", "Philosophy", "Sociology", "Education", "Architecture", "Art", "Design", "Film", "Acting", "Musical Theatre", "Music", "Dance", "Undecided"];
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 const numOrNull = (v: string) => (v.trim() === "" ? null : Number(v));
@@ -67,7 +68,9 @@ function ActivityRow({ a, onChange, onRemove, index }: { a: Activity; onChange: 
 }
 
 export default function ProfilePage() {
-  const { profile: p, setProfile, profileComplete, ready, resetAll } = useStore();
+  const { profile: p, setProfile, profileComplete, ready, resetAll, saveState } = useStore();
+  const [welcome, setWelcome] = useState(false);
+  useEffect(() => setWelcome(new URLSearchParams(window.location.search).has("welcome")), []);
   if (!ready) return null;
   const set = <K extends keyof Profile>(k: K, v: Profile[K]) => setProfile((prev) => ({ ...prev, [k]: v }));
   const words = p.personalStatement.trim() ? p.personalStatement.trim().split(/\s+/).length : 0;
@@ -77,7 +80,7 @@ export default function ProfilePage() {
       <PageHeader
         eyebrow="Your application"
         title="Profile"
-        subtitle="Fill this in once. Your evaluation, essays, scholarships and roadmap all read from it. Changes save to your account automatically."
+        subtitle="Fill this in once. Every college evaluation, your essays, scholarships and roadmap read from it. Changes save automatically."
         action={
           <div className="w-full max-w-xs rounded-2xl border border-line bg-surface p-4 sm:w-64">
             <div className="flex items-center justify-between text-sm">
@@ -85,13 +88,30 @@ export default function ProfilePage() {
               <span className="tabular-nums">{profileComplete}%</span>
             </div>
             <Progress value={profileComplete} className="mt-2" tone={profileComplete >= 80 ? "good" : "warn"} />
-            {p.importedFrom && <div className="mt-2 text-xs text-muted">Imported from {p.importedFrom}</div>}
+            <div className="mt-2 text-xs" data-testid="save-state">
+              {saveState === "saving" ? <span className="text-muted">Saving…</span> : saveState === "error" ? <span className="text-warn">Not saved yet: kept on this device</span> : <span className="text-good">✓ Saved automatically</span>}
+            </div>
           </div>
         }
       />
 
       <div className="space-y-6">
-        <CommonAppImport onApply={(partial) => setProfile((prev) => mergeImport(prev, partial))} />
+        {welcome && (
+          <Card className="paper p-6" data-testid="welcome">
+            <div className="eyebrow">Welcome{p.name ? `, ${p.name.split(" ")[0]}` : ""}</div>
+            <h2 className="font-display mt-3 text-2xl font-semibold tracking-tight">Enter your application once.</h2>
+            <p className="mt-2 max-w-2xl text-sm text-muted">
+              Add your grades, test scores, activities, honors and personal essay below. Everything saves to your account as you type, and every college you evaluate uses it, so you never re-enter it.
+            </p>
+            <ol className="mt-4 grid gap-2 text-sm sm:grid-cols-4">
+              {["Basics and intended major", "Academics and scores", "Activities and honors", "Personal statement"].map((t, i) => (
+                <li key={t} className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2">
+                  <span className="font-mono text-xs text-accent">0{i + 1}</span> {t}
+                </li>
+              ))}
+            </ol>
+          </Card>
+        )}
 
         <Card>
           <CardHeader title="Basics" icon={<UserRound size={16} />} />
@@ -110,8 +130,13 @@ export default function ProfilePage() {
                 {STATES.map((s) => <option key={s}>{s}</option>)}
               </select>
             </Field>
-            <Field label="Intended major">
-              <input className={inputCls} value={p.intendedMajor} onChange={(e) => set("intendedMajor", e.target.value)} placeholder="e.g. Computer Science" />
+            <Field label="Intended major" hint="Picks the school or program inside each college">
+              <input className={inputCls} list="majors" value={p.intendedMajor} onChange={(e) => set("intendedMajor", e.target.value)} placeholder="e.g. Computer Science" />
+              <datalist id="majors">
+                {MAJORS.map((m) => (
+                  <option key={m} value={m} />
+                ))}
+              </datalist>
             </Field>
             <Field label="High school" className="sm:col-span-2">
               <input className={inputCls} value={p.highSchool} onChange={(e) => set("highSchool", e.target.value)} />
@@ -279,6 +304,16 @@ export default function ProfilePage() {
               <p className="mt-1 text-xs text-muted">Only counted at schools that still consider legacy status (e.g. MIT, Johns Hopkins, Amherst and the UCs don't).</p>
             </div>
           </div>
+        </Card>
+
+        <Card className="flex flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center">
+          <div>
+            <div className="font-semibold">Ready for your evaluation?</div>
+            <p className="text-sm text-muted">Pick a college and the school or program you're applying to. Your saved profile is used automatically.</p>
+          </div>
+          <Link href="/evaluate" className="inline-flex shrink-0 items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-[var(--surface)] hover:brightness-110" data-testid="to-evaluate">
+            Get my evaluation →
+          </Link>
         </Card>
 
         <div className="flex flex-wrap justify-end gap-3">

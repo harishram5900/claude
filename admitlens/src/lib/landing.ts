@@ -7,6 +7,8 @@ import { analyzeEssay } from "./essay";
 import { toFundingProfile } from "./fundingProfile";
 import { money, rank } from "./grantscout";
 import { buildRoadmap } from "./roadmap";
+import { getProgram } from "@/data/programs";
+import { applyProgram } from "./programs";
 
 const essayStats = (t: string) => {
   const a = analyzeEssay(t, { limit: 650 });
@@ -42,7 +44,23 @@ export function landingData(today = new Date()) {
     .slice(0, 5)
     .map((m) => ({ phase: m.phase, title: m.title, priority: m.priority }));
 
+  // Same student, same university, different schools inside it.
+  const programRows = (cid: string, ids: (string | null)[]) => {
+    const c = getCollege(cid)!;
+    return {
+      college: c.short,
+      rows: ids.map((pid) => {
+        const t = applyProgram(c, getProgram(cid, pid));
+        const e = evaluate(p2, t);
+        return { name: pid ? t.program!.name : `${c.short} overall`, rate: t.admitRate, chance: e.chance, decision: e.decision, arts: t.program?.kind === "arts", estimated: !!t.program && !getProgram(cid, pid)?.rate && !getProgram(cid, pid)?.relativeOdds };
+      }),
+    };
+  };
+  const programs = [programRows("nyu", [null, "stern", "cas", "tandon", "tisch-drama"]), programRows("uiuc", [null, "las", "gies", "grainger", "cs"])];
+
   return {
+    profile: { gpa: (p2.gpaUnweighted ?? 0).toFixed(2), sat: String(p2.sat ?? "—"), ap: String(p2.apCount), activities: String(p2.activities.length), honors: String(p2.awards.length), essay: `${analyzeEssay(DRAFT_2).words} words` },
+    programs,
     mich: {
       short: mich.short,
       chance: m2.chance,

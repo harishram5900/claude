@@ -6,6 +6,7 @@ import { ListBuilder } from "@/components/ListBuilder";
 import { Badge, Card, categoryTone, cx, Empty, fmtPct, inputCls, PageHeader, Progress } from "@/components/ui";
 import { getCollege, type College } from "@/data/colleges";
 import { evaluate } from "@/lib/engine";
+import { collegeForProgram } from "@/lib/programs";
 import { useStore } from "@/lib/store";
 import type { AppPlan, TrackerEntry, TrackerStatus } from "@/lib/types";
 import { useCollege } from "@/lib/useCollege";
@@ -24,9 +25,9 @@ const statusTone: Record<TrackerStatus, "neutral" | "brand" | "good" | "warn" | 
 };
 
 function Row({ e, onChange, onRemove }: { e: TrackerEntry; onChange: (e: TrackerEntry) => void; onRemove: () => void }) {
-  const { profile } = useStore();
+  const { profile, programs } = useStore();
   const { college } = useCollege(e.collegeId);
-  const ev = college ? evaluate(profile, college, e.plan) : null;
+  const ev = college ? evaluate(profile, collegeForProgram(college, programs), e.plan) : null;
   const done = CHECKLIST.filter((k) => e.checklist[k]).length;
   const days = e.deadline ? Math.ceil((new Date(e.deadline).getTime() - Date.now()) / 86400000) : null;
   const plans: AppPlan[] = college ? (["RD", college.plans.ed && "ED", college.plans.ed2 && "ED2", college.plans.rea && "REA", college.plans.ea && "EA"].filter(Boolean) as AppPlan[]) : ["RD"];
@@ -85,7 +86,7 @@ function Row({ e, onChange, onRemove }: { e: TrackerEntry; onChange: (e: Tracker
 }
 
 export default function TrackerPage() {
-  const { tracker, setTracker, ready, profile } = useStore();
+  const { tracker, setTracker, ready, profile, programs } = useStore();
   if (!ready) return null;
   const counts = STATUSES.map((s) => [s, tracker.filter((t) => t.status === s).length] as const).filter(([, n]) => n > 0);
   const add = (c: College) => {
@@ -93,7 +94,7 @@ export default function TrackerPage() {
     setTracker((t) => [...t, { collegeId: c.id, collegeName: c.name, plan: "RD", status: "Researching", deadline: guessDeadline(c, "RD"), checklist: {}, notes: "", addedAt: Date.now() }]);
   };
   const sorted = [...tracker].sort((a, b) => (a.deadline || "9999").localeCompare(b.deadline || "9999"));
-  const mix = tracker.map((t) => getCollege(t.collegeId)).filter(Boolean).map((c) => evaluate(profile, c!).category);
+  const mix = tracker.map((t) => getCollege(t.collegeId)).filter(Boolean).map((c) => evaluate(profile, collegeForProgram(c!, programs)).category);
   const reaches = mix.filter((m) => m === "Reach" || m === "High reach").length;
   const safeties = mix.filter((m) => m === "Safety" || m === "Likely").length;
 

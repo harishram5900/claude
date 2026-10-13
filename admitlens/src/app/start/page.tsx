@@ -3,10 +3,7 @@ import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, FileUp, GraduationCap, Loade
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CollegePicker } from "@/components/CollegePicker";
-import { CommonAppImport } from "@/components/CommonAppImport";
 import { Button, Card, cx, Field, inputCls } from "@/components/ui";
-import { mergeImport } from "@/lib/commonapp";
 import { STATUS_OPTIONS } from "@/lib/grantscout";
 import { useStore, type Goal } from "@/lib/store";
 import { EMPTY_FUNDING, STATES } from "@/lib/types";
@@ -29,7 +26,7 @@ const QUICK_STATUS: [string, string][] = [
 const VISAS = ["h4", "l2", "other_dependent", "f1", "j1"];
 const label = (k: string) => STATUS_OPTIONS.find(([v]) => v === k)?.[1] ?? k;
 
-const STEPS = ["Name", "Grade", "Goals", "Status", "Account", "Application", "College"];
+const STEPS = ["Name", "Grade", "Goals", "Status", "Account"];
 
 export default function Start() {
   const router = useRouter();
@@ -43,7 +40,6 @@ export default function Start() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [statusChoice, setStatusChoice] = useState<string | null>(null);
-  const [imported, setImported] = useState(false);
 
   // Already set up and signed in: nothing to redo here; edits happen in the profile.
   useEffect(() => {
@@ -73,25 +69,20 @@ export default function Start() {
   const senior = profile.grade >= 12;
   const next = () => {
     setErr(null);
-    let s = step + 1;
-    if (s === 4 && (user || !accountsAvailable)) s = 5; // already signed in, or accounts not switched on yet
+    const s = step + 1;
+    if (s === 4 && (user || !accountsAvailable)) return finish(); // already signed in, or accounts not switched on yet
     setStep(s);
     window.scrollTo({ top: 0 });
   };
   const back = () => {
     setErr(null);
-    setStep((s) => (s === 5 && (user || !accountsAvailable) ? 3 : Math.max(0, s - 1)));
+    setStep((s) => Math.max(0, s - 1));
   };
 
-  const finish = (collegeId: string | null) => {
+  // The questionnaire only gets to know the student; their application is entered next, in the profile.
+  const finish = () => {
     setOnboarded(true);
-    if (collegeId) {
-      setDreamCollege(collegeId);
-      router.push(`/evaluate?college=${encodeURIComponent(collegeId)}`);
-      return;
-    }
-    const first = goals[0];
-    router.push(first === "scholarships" ? "/scholarships" : first === "essays" ? "/essays" : first === "roadmap" ? "/roadmap" : "/dashboard");
+    router.push(goals.length === 1 && goals[0] === "scholarships" ? "/scholarships" : "/profile?welcome=1");
   };
 
   const createAccount = async () => {
@@ -100,7 +91,7 @@ export default function Start() {
     const e = await signUp(email, password, `${first} ${last}`.trim());
     setBusy(false);
     if (e) setErr(e);
-    else next();
+    else finish();
   };
 
   return (
@@ -310,65 +301,6 @@ export default function Start() {
         </Card>
       )}
 
-      {step === 5 && (
-        <div className="space-y-4">
-          <Card className="p-7">
-            <div className="eyebrow">Your application</div>
-            <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight">Upload your Common App</h1>
-            <p className="mt-1 text-sm text-muted">We'll fill in your grades, test scores, activities, honors and essay so you don't have to type them. You'll check everything before it's saved.</p>
-          </Card>
-          <CommonAppImport
-            compact
-            onApply={(partial) => {
-              setProfile((p) => mergeImport(p, partial));
-              setImported(true);
-            }}
-          />
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <button onClick={back} className="flex items-center gap-1 text-sm text-muted hover:text-ink">
-              <ArrowLeft size={15} /> Back
-            </button>
-            <div className="flex flex-wrap gap-2">
-              {!imported && (
-                <Button variant="secondary" onClick={next}>
-                  {senior ? "Skip for now" : "I don't have one yet"}
-                </Button>
-              )}
-              <Button onClick={next} disabled={!imported} data-testid="after-import">
-                <FileUp size={16} /> Continue
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {step === 6 && (
-        <Card className="p-7">
-          <div className="eyebrow">Last step</div>
-          <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight">{goals.includes("admissions") || goals.includes("roadmap") ? "Which college is your dream school?" : "You're all set"}</h1>
-          {goals.includes("admissions") || goals.includes("roadmap") ? (
-            <>
-              <p className="mt-1 text-sm text-muted">Its admissions office will evaluate your full application: ratings for each part, your chances, and a written review of how your file would be read there.</p>
-              <CollegePicker onPick={(c) => finish(c.id)} placeholder="Search any U.S. college…" className="mt-6" />
-              <div className="mt-6 flex items-center justify-between">
-                <button onClick={back} className="flex items-center gap-1 text-sm text-muted hover:text-ink">
-                  <ArrowLeft size={15} /> Back
-                </button>
-                <button onClick={() => finish(null)} className="text-sm text-muted hover:text-ink">
-                  I'll choose later
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <p className="mt-1 text-sm text-muted">Your profile is saved. {goals.includes("scholarships") ? "Your scholarship matches are ready." : ""}</p>
-              <Button className="mt-6" onClick={() => finish(null)}>
-                {goals[0] === "scholarships" ? "See my scholarships" : goals[0] === "essays" ? "Open my essays" : "Go to my dashboard"} <ArrowRight size={16} />
-              </Button>
-            </>
-          )}
-        </Card>
-      )}
     </div>
   );
 }

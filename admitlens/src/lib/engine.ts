@@ -275,11 +275,13 @@ function core(p: Profile, c: College, plan: AppPlan): Core {
   const flags: string[] = [];
 
   // ---- weights (logit units per z) interpolated by selectivity
+  const kind = c.program?.kind ?? "standard";
   const W = {
     gpa: P("gpaW", t),
-    test: P("testW", t),
-    rigor: P("rigorW", t),
-    ec: P("ecW", t),
+    // Engineering/CS programs lean harder on math-heavy testing and course rigor; business programs on leadership.
+    test: P("testW", t) * (kind === "stem" ? 1.3 : 1),
+    rigor: P("rigorW", t) * (kind === "stem" ? 1.25 : 1),
+    ec: P("ecW", t) * (kind === "business" ? 1.1 : 1),
     essay: P("essayW", t),
     recs: P("recsW", t),
   };
@@ -363,6 +365,16 @@ function core(p: Profile, c: College, plan: AppPlan): Core {
   const academicZ = (zGpa * 1.2 + (testW ? zTest : zGpa) * 0.9 + zRigor * 0.7) / 2.8;
   const screen = P("screen", t);
   if (academicZ < screen) L -= (screen - academicZ) * P("screenPenalty", t);
+
+  // Audition/portfolio programs: the artistic review decides most outcomes, so the academic file moves
+  // the odds far less than usual.
+  if (kind === "arts") {
+    const base = logit(c.admitRate) + BASE_OFFSET(t);
+    L = base + (L - base) * 0.2;
+    flags.push(`${c.short} admits mainly on ${c.program?.requires?.join(" and ").toLowerCase() ?? "the artistic review"}. This estimate reflects your academic file only; the artistic review can move it either way.`);
+  }
+  if (kind === "business" && !p.activities.some((a) => a.leadership)) flags.push(`${c.short} looks for leadership and business initiative; no leadership roles are listed yet.`);
+  if (kind === "stem" && !p.sat && !p.act && c.testPolicy !== "blind") flags.push(`Engineering and CS programs read math preparation closely; without test scores, your math grades and course level carry that read.`);
 
   // Hooks and context
   if (p.recruitedAthlete && tier <= 3) {
@@ -721,7 +733,8 @@ function readAwards(p: Profile, c: College, tier: Tier): AwardRead[] {
     });
 }
 
-function decisionFor(rel: number, chance: number, tier: Tier) {
+function decisionFor(rel: number, chance: number, tier: Tier, arts = false) {
+  if (arts) return chance >= 0.5 ? "Academically clear; the audition or portfolio decides" : "Depends mainly on your audition or portfolio";
   if (tier >= 4 && chance >= 0.8) return "Admit";
   if (rel >= 0.75) return "Admit pile: likely admit";
   if (rel >= 0.5) return "Strong consideration: likely admitted in committee";
@@ -732,6 +745,10 @@ function decisionFor(rel: number, chance: number, tier: Tier) {
 
 function reviewProcess(p: Profile, c: College, tier: Tier, plan: AppPlan) {
   const parts: string[] = [];
+  if (c.program) {
+    parts.push(`You apply directly to ${c.program.name}, and it reads its own applicants: ${c.program.review}${c.program.requires?.length ? ` Required: ${c.program.requires.join("; ")}.` : ""}`);
+    if (c.admitRate < c.program.parentRate * 0.8) parts.push(`It admits about ${pct(c.admitRate)}, well below ${c.program.parentShort}'s overall ${pct(c.program.parentRate)}.`);
+  }
   const region = p.state && p.state !== "International" ? `${p.state} schools` : "your region";
   if (tier <= 2) {
     parts.push(
@@ -876,7 +893,7 @@ export function evaluate(p: Profile, c: College, plan: AppPlan = "RD"): Evaluati
   const imps = improvements(p, c, plan, chance);
   const activityReads = readActivities(p, c, tier);
   const awardReads = readAwards(p, c, tier);
-  const decision = decisionFor(rel, chance, tier);
+  const decision = decisionFor(rel, chance, tier, c.program?.kind === "arts");
   const evaluation = writeEvaluation(p, c, tier, k, { chance, low: chanceLow, high: chanceHigh, decision, activityReads, awardReads, improvement: imps[0] ?? null, plan });
   return {
     college: c,

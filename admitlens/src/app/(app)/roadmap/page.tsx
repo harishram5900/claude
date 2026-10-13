@@ -6,6 +6,7 @@ import { CollegePicker } from "@/components/CollegePicker";
 import { Badge, ButtonLink, Card, cx, fmtPct, PageHeader, Progress } from "@/components/ui";
 import { evaluate } from "@/lib/engine";
 import { buildRoadmap, currentPhase, PHASES, type Track } from "@/lib/roadmap";
+import { collegeForProgram } from "@/lib/programs";
 import { useStore } from "@/lib/store";
 import { useCollege } from "@/lib/useCollege";
 
@@ -20,13 +21,13 @@ const TRACK_COLOR: Record<Track, string> = {
 };
 
 export default function RoadmapPage() {
-  const { profile, dreamCollege, setDreamCollege, roadmapDone, toggleRoadmap, ready } = useStore();
+  const { profile, dreamCollege, setDreamCollege, roadmapDone, toggleRoadmap, ready, programs } = useStore();
   const { college } = useCollege(dreamCollege);
   const [filter, setFilter] = useState<Track | "All" | "Priority">("All");
   const [showPast, setShowPast] = useState(false);
   const now = currentPhase(profile.grade);
   const items = useMemo(() => buildRoadmap(profile, college), [profile, college]);
-  const ev = useMemo(() => (college ? evaluate(profile, college) : null), [profile, college]);
+  const ev = useMemo(() => (college ? evaluate(profile, collegeForProgram(college, programs)) : null), [profile, college, programs]);
   const chance = ev?.chance ?? null;
   if (!ready) return null;
 

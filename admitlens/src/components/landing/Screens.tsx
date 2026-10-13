@@ -34,25 +34,30 @@ export function EvalScreen({ d }: { d: LandingData }) {
   );
 }
 
-export function ImportScreen() {
-  const items = ["Grades and test scores", "Activities, roles and hours", "Honors and their levels", "Your personal essay", "Page numbers and watermark removed"];
+export function ProfileScreen({ d }: { d: LandingData }) {
+  const items: [string, string][] = [
+    ["GPA (unweighted)", d.profile.gpa],
+    ["SAT", d.profile.sat],
+    ["AP / IB courses", d.profile.ap],
+    ["Activities", d.profile.activities],
+    ["Honors", d.profile.honors],
+    ["Personal essay", d.profile.essay],
+  ];
   return (
     <>
-      <ScreenHead eyebrow="Common App import" title="Reading your PDF" onIvy />
-      <div className="relative mx-auto mt-6 h-40 w-36 overflow-hidden rounded-xl border border-white/20 bg-white/[0.06] p-3" aria-hidden>
-        {Array.from({ length: 9 }, (_, i) => (
-          <div key={i} className="mb-2 h-[5px] rounded-full bg-white/25" style={{ width: `${55 + ((i * 29) % 45)}%` }} />
-        ))}
-        <div className="lp-scan absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-transparent via-[#e0b65a]/35 to-transparent" />
-      </div>
-      <ul className="mt-6 space-y-2.5 text-[12.5px]">
-        {items.map((t, i) => (
-          <li key={t} className="lp-tick flex items-center gap-2.5" style={{ animationDelay: `${0.3 + i * 0.4}s` }}>
-            <span className="grid h-5 w-5 place-items-center rounded-full bg-[#e0b65a] text-[10px] font-bold text-[#1d3b31]">✓</span>
-            {t}
+      <ScreenHead eyebrow="Your profile" title="Entered once" onIvy />
+      <ul className="mt-5 space-y-2">
+        {items.map(([k, v], i) => (
+          <li key={k} className="lp-tick flex items-center justify-between rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2 text-[12.5px]" style={{ animationDelay: `${0.2 + i * 0.3}s` }}>
+            <span className="opacity-75">{k}</span>
+            <span className="font-semibold">{v}</span>
           </li>
         ))}
       </ul>
+      <div className="mt-4 flex items-center gap-2 text-[12px] text-[#e0b65a]">
+        <span className="grid h-5 w-5 place-items-center rounded-full bg-[#e0b65a] text-[10px] font-bold text-[#1d3b31]">✓</span>
+        Saved automatically · used for every college
+      </div>
     </>
   );
 }

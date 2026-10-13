@@ -20,6 +20,7 @@ interface Snapshot {
   customAwards: FundingRecord[];
   goals: Goal[];
   onboarded: boolean;
+  programs: Record<string, string>; // collegeId → chosen school/program id
 }
 
 interface Store extends Snapshot {
@@ -35,6 +36,7 @@ interface Store extends Snapshot {
   setCustomAwards: (a: FundingRecord[] | ((prev: FundingRecord[]) => FundingRecord[])) => void; // the student's own GrantScout finds
   setGoals: (g: Goal[]) => void;
   setOnboarded: (v: boolean) => void;
+  setProgram: (collegeId: string, programId: string | null) => void;
   profileComplete: number; // 0–100
   resetAll: () => void;
   signUp: (email: string, password: string, name: string) => Promise<string | null>;
@@ -46,7 +48,7 @@ const Ctx = createContext<Store | null>(null);
 const ANON_KEY = "admitlens:v1"; // answers given before an account exists
 const userKey = (id: string) => `admitlens:u:${id}`; // per-account cache for fast, offline-tolerant loads
 
-const EMPTY: Snapshot = { profile: EMPTY_PROFILE, tracker: [], essays: [], dreamCollege: null, roadmapDone: {}, customAwards: [], goals: [], onboarded: false };
+const EMPTY: Snapshot = { profile: EMPTY_PROFILE, tracker: [], essays: [], dreamCollege: null, roadmapDone: {}, customAwards: [], goals: [], onboarded: false, programs: {} };
 
 function readLocal(key: string): Partial<Snapshot> {
   try {
@@ -213,6 +215,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setCustomAwards: field("customAwards"),
       setGoals: field("goals") as (g: Goal[]) => void,
       setOnboarded: field("onboarded") as (v: boolean) => void,
+      setProgram: (collegeId: string, programId: string | null) =>
+        setSnap((s) => {
+          const programs = { ...s.programs };
+          if (programId) programs[collegeId] = programId;
+          else delete programs[collegeId];
+          return { ...s, programs };
+        }),
       toggleRoadmap: (id: string) => setSnap((s) => ({ ...s, roadmapDone: { ...s.roadmapDone, [id]: !s.roadmapDone[id] } })),
       resetAll: () => setSnap((s) => ({ ...EMPTY, goals: s.goals, onboarded: s.onboarded })),
     }),

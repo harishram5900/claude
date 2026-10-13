@@ -6,6 +6,7 @@ import { getCollege } from "@/data/colleges";
 import { analyzeEssay } from "@/lib/essay";
 import { evaluate, unweightedGpa } from "@/lib/engine";
 import { buildRoadmap, currentPhase } from "@/lib/roadmap";
+import { collegeForProgram } from "@/lib/programs";
 import { useStore } from "@/lib/store";
 import { useCollege } from "@/lib/useCollege";
 import { money } from "@/lib/grantscout";
@@ -13,7 +14,7 @@ import { useFunding } from "@/lib/useFunding";
 import { fmtDeadline } from "@/components/funding/ResultCard";
 
 export default function Dashboard() {
-  const { profile, profileComplete, tracker, dreamCollege, roadmapDone, ready, goals, onboarded } = useStore();
+  const { profile, profileComplete, tracker, dreamCollege, roadmapDone, ready, goals, onboarded, programs } = useStore();
   const { college: dream } = useCollege(dreamCollege);
   const funding = useFunding();
   if (!ready) return null;
@@ -25,18 +26,17 @@ export default function Dashboard() {
         <Empty
           icon={<Sparkles size={22} />}
           title="No profile yet"
-          body="Upload your Common App PDF and we'll fill in your grades, scores, activities, honors and essay. Or enter them yourself."
+          body="Enter your grades, scores, activities, honors and essay once. They save automatically and every college evaluation uses them."
           action={
             <div className="flex flex-wrap justify-center gap-2">
-              <ButtonLink href="/profile">Upload Common App</ButtonLink>
-              <ButtonLink href="/profile" variant="secondary">Enter manually</ButtonLink>
+              <ButtonLink href="/profile">Fill in my profile</ButtonLink>
             </div>
           }
         />
       </div>
     );
 
-  const ev = dream ? evaluate(profile, dream) : null;
+  const ev = dream ? evaluate(profile, collegeForProgram(dream, programs)) : null;
   const upcoming = tracker.filter((t) => t.deadline && !["Submitted", "Admitted", "Denied", "Waitlisted", "Committed"].includes(t.status)).sort((a, b) => a.deadline.localeCompare(b.deadline)).slice(0, 5);
   const essay = profile.personalStatement ? analyzeEssay(profile.personalStatement) : null;
   const scholarships = funding.top.slice(0, 4);
@@ -55,7 +55,7 @@ export default function Dashboard() {
       <PageHeader eyebrow="Dashboard" title={`Hi${profile.name ? `, ${profile.name.split(" ")[0]}` : ""}`} subtitle="Here's where your applications stand today." />
       {!onboarded && (
         <Card className="mb-6 flex flex-wrap items-center justify-between gap-3 p-5">
-          <div className="text-sm">Finish setting up: answer a few questions and upload your Common App.</div>
+          <div className="text-sm">Finish setting up: answer a few quick questions about you.</div>
           <ButtonLink href="/start">Continue setup</ButtonLink>
         </Card>
       )}
@@ -139,7 +139,7 @@ export default function Dashboard() {
             {tracker.length === 0 && <p className="p-5 text-sm text-muted">Add colleges from the tracker or any college page.</p>}
             {tracker.slice(0, 6).map((t) => {
               const c = getCollege(t.collegeId);
-              const e = c ? evaluate(profile, c, t.plan) : null;
+              const e = c ? evaluate(profile, collegeForProgram(c, programs), t.plan) : null;
               return (
                 <Link key={t.collegeId} href={`/evaluate?college=${t.collegeId}`} className="flex items-center justify-between px-5 py-3 text-sm hover:bg-surface-2">
                   <span className="truncate">{t.collegeName}</span>

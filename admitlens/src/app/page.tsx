@@ -1,13 +1,13 @@
-import { ArrowRight, ArrowUpRight, Check, FileUp, GraduationCap, Map, PenLine, Trophy } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, GraduationCap, Map, PenLine, Trophy } from "lucide-react";
 import Link from "next/link";
-import { ImportDemo } from "@/components/landing/ImportDemo";
+import { ProgramsDemo } from "@/components/landing/ProgramsDemo";
 import { LandingNav } from "@/components/landing/LandingNav";
 import { PauseToggle } from "@/components/landing/PauseToggle";
 import { Phone, Ring } from "@/components/landing/Phone";
 import { PrivacyPanel } from "@/components/landing/PrivacyPanel";
 import { ReadersCarousel } from "@/components/landing/ReadersCarousel";
 import { Reveal } from "@/components/landing/Reveal";
-import { EvalScreen, ImportScreen, NoteScreen, RetryScreen, RoadmapScreen, ScholarshipScreen } from "@/components/landing/Screens";
+import { EvalScreen, NoteScreen, ProfileScreen, RetryScreen, RoadmapScreen, ScholarshipScreen } from "@/components/landing/Screens";
 import { COLLEGES } from "@/data/colleges";
 import { FUNDING_LIBRARY } from "@/data/funding";
 import { RESOURCES } from "@/data/resources";
@@ -20,7 +20,8 @@ const pct = (x: number) => `${Math.round(x * 100)}%`;
 
 const FAQ: [string, string][] = [
   ["How accurate are the chances?", "They're estimates from a transparent model, not predictions. Each college is anchored to its real admit rate, test ranges and typical GPA, and the most selective end is fitted to real outcomes from Harvard's admissions data released in SFFA v. Harvard. Nobody outside a college can see the rest of the applicant pool, so use your evaluation to find your biggest levers."],
-  ["Does it connect to my Common App account?", "Common App doesn't let outside apps sign in to student accounts. Download your application PDF from Common App's Preview and upload it. AdmitLens reads it in your browser, skips the watermark, page numbers and headers, and fills in your profile. You confirm every field."],
+  ["Do I have to enter my info for every college?", "No. You enter your grades, scores, activities, honors and essay once in your profile. It saves to your account automatically, and every college and program you evaluate uses it."],
+  ["Does my major change my chances?", "At universities that admit by school or major, yes. NYU Stern, UIUC Computer Science and Berkeley EECS admit far fewer students than their universities overall, and drama or film programs decide mainly on auditions and portfolios. Pick the program and the evaluation changes with it. Where a program's admit rate is published we use it and cite the source; where it isn't, we say so."],
   ["Why do you ask about citizenship or visa status?", "Many scholarships are limited to citizens, permanent residents or specific statuses. Your answer only hides awards you can't receive. It's optional, and it never appears in a report or PDF."],
   ["Is AdmitLens free?", "Yes. There's nothing to buy and no premium tier."],
   ["Will it write my essays?", "No. It shows what's working and what isn't, line by line, and how a revision changes your odds. The words stay yours, which is what colleges expect."],
@@ -28,7 +29,7 @@ const FAQ: [string, string][] = [
   ["I'm not a senior yet. Is this for me?", "Yes. 9th to 11th graders get a grade-by-grade roadmap built from what their dream school's readers look for, plus scholarships they can start on now."],
 ];
 
-const PRIVACY = ["Your PDF is read in your browser and never uploaded", "Your visa answer only filters scholarships", "Passwords are hashed; sessions are signed", "Nothing is sold, shared or used for ads"];
+const PRIVACY = ["Your profile saves privately to your account", "Your visa answer only filters scholarships", "Passwords are hashed; sessions are signed", "Nothing is sold, shared or used for ads"];
 
 function SectionHead({ eyebrow, title, body, center = false, onIvy = false }: { eyebrow: string; title: React.ReactNode; body?: string; center?: boolean; onIvy?: boolean }) {
   return (
@@ -44,8 +45,8 @@ export default function Home() {
   const d = landingData();
   const verified = COLLEGES.filter((c) => c.verified).length;
   const steps = [
-    { n: "01", title: "Upload your Common App", body: "Your grades, scores, activities, honors and essay fill in by themselves. You confirm each field.", screen: <ImportScreen />, tone: "ivy" as const, tint: "lp-tint-navy" },
-    { n: "02", title: "Pick your dream college", body: "Its admissions reader rates every part of your file from 1 to 6 against that school's admitted students.", screen: <EvalScreen d={d} />, tone: "paper" as const, tint: "lp-tint-brand" },
+    { n: "01", title: "Enter your application once", body: "Grades, scores, activities, honors and essay. It saves automatically, so you never re-enter it for another college.", screen: <ProfileScreen d={d} />, tone: "ivy" as const, tint: "lp-tint-navy" },
+    { n: "02", title: "Pick the college and program", body: "Its admissions reader rates every part of your file from 1 to 6 against the students that school or program admits.", screen: <EvalScreen d={d} />, tone: "paper" as const, tint: "lp-tint-brand" },
     { n: "03", title: "Get the first fix", body: "Every evaluation ends with the one change worth the most points, taken from your own file.", screen: <NoteScreen d={d} />, tone: "paper" as const, tint: "lp-tint-accent" },
     { n: "04", title: "Revise and re-score", body: "Change something and every number is re-read against the same college, so you see what it was worth.", screen: <RetryScreen d={d} />, tone: "paper" as const, tint: "lp-tint-brand" },
   ];
@@ -69,11 +70,11 @@ export default function Home() {
             Your first read shouldn’t be the <em className="text-brand">real</em> one.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted">
-            Upload your Common App and have it read the way your dream school's office reads it: rated, questioned and given a verdict. Then see every scholarship you actually qualify for, visa status included.
+            Enter your application once and have it read the way your dream school's office reads it, down to the program you're applying to: rated, questioned and given a verdict. Then see every scholarship you actually qualify for, visa status included.
           </p>
           <div className="mt-9 flex flex-wrap justify-center gap-3">
             <Link href="/start" className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3.5 text-[15px] font-medium text-[var(--surface)] shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] transition hover:brightness-110">
-              <FileUp size={17} /> Get started free
+              Get started free <ArrowRight size={17} />
             </Link>
             <Link href="/signin" className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-6 py-3.5 text-[15px] font-medium transition hover:bg-surface-2">
               I have an account
@@ -122,7 +123,7 @@ export default function Home() {
       <section id="how" className="scroll-mt-24 px-4 py-20 sm:px-6 sm:py-28">
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-            <SectionHead eyebrow="How it works" title="From PDF to plan in four steps." body="One saved profile powers everything, so you never type the same thing twice." />
+            <SectionHead eyebrow="How it works" title="From profile to plan in four steps." body="One saved profile powers everything, so you never type the same thing twice." />
             <PauseToggle target="steps" />
           </div>
           <div id="steps" className="mt-12 grid gap-5 md:grid-cols-2">
@@ -148,8 +149,8 @@ export default function Home() {
       <section className="px-4 sm:px-6">
         <div className="mx-auto max-w-6xl space-y-6">
           <Reveal className="paper grid items-center gap-10 overflow-hidden rounded-[2rem] border border-line p-6 shadow-card sm:p-12 lg:grid-cols-[0.95fr_1.05fr]">
-            <SectionHead eyebrow="Common App import" title="Only your answers make it in." body="The printout adds a watermark, page numbers, running headers, a print stamp and the full prompt list. AdmitLens keeps your real answers and leaves the rest behind." />
-            <ImportDemo />
+            <SectionHead eyebrow="Program-specific" title="NYU Tisch isn't NYU Stern." body="Pick the college and the school or major you're applying to. Each one has its own admit rate and its own reader: engineering leans on math, business on leadership, and drama and film on the audition or portfolio." />
+            <ProgramsDemo data={d.programs} />
           </Reveal>
 
           <Reveal className="lp-ivy grid items-center gap-10 overflow-hidden rounded-[2rem] p-6 shadow-card sm:p-12 lg:grid-cols-[0.95fr_1.05fr]">
@@ -311,7 +312,7 @@ export default function Home() {
         <Reveal className="paper relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] border border-line px-8 py-16 text-center shadow-card">
           <div className="eyebrow">Start here</div>
           <h2 className="font-display mx-auto mt-4 max-w-2xl text-4xl font-medium tracking-tight sm:text-5xl">Your dream school is a plan, not a lottery ticket.</h2>
-          <p className="mx-auto mt-4 max-w-xl text-muted">A one-minute questionnaire, then thirty seconds with your Common App PDF.</p>
+          <p className="mx-auto mt-4 max-w-xl text-muted">A one-minute questionnaire, then enter your application once. Every college and program uses it.</p>
           <Link href="/start" className="mt-8 inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3.5 text-[15px] font-medium text-[var(--surface)] transition hover:brightness-110">
             Get started free <ArrowRight size={17} />
           </Link>

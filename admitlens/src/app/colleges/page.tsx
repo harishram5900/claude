@@ -7,11 +7,12 @@ import { CollegePicker } from "@/components/CollegePicker";
 import { Badge, Card, categoryTone, cx, fmtPct, inputCls, PageHeader } from "@/components/ui";
 import { COLLEGES } from "@/data/colleges";
 import { chanceOnly, collegeSatRange, tierOf, TIER_INFO, type Tier } from "@/lib/engine";
+import { collegeForProgram } from "@/lib/programs";
 import { useStore } from "@/lib/store";
 
 export default function CollegesPage() {
   const router = useRouter();
-  const { profile, profileComplete, ready } = useStore();
+  const { profile, profileComplete, ready, programs } = useStore();
   const [q, setQ] = useState("");
   const [state, setState] = useState("");
   const [tier, setTier] = useState<"" | Tier>("");
@@ -29,7 +30,7 @@ export default function CollegesPage() {
         (!tier || tierOf(c) === tier) &&
         (!control || c.control === control) &&
         (!policy || c.testPolicy === policy),
-    ).map((c) => ({ c, chance: showChance ? chanceOnly(profile, c) : 0 }));
+    ).map((c) => ({ c, chance: showChance ? chanceOnly(profile, collegeForProgram(c, programs)) : 0 }));
     l = l.sort((a, b) =>
       sort === "selective" ? a.c.admitRate - b.c.admitRate : sort === "chance" ? b.chance - a.chance : sort === "cost" ? a.c.coa - b.c.coa : a.c.name.localeCompare(b.c.name),
     );
@@ -88,7 +89,7 @@ export default function CollegesPage() {
           const sat = collegeSatRange(c);
           const cat = chance >= 0.8 ? "Safety" : chance >= 0.6 ? "Likely" : chance >= 0.33 && c.admitRate >= 0.15 ? "Target" : chance >= 0.12 ? "Reach" : "High reach";
           return (
-            <Link key={c.id} href={`/colleges/${c.id}`} className="group">
+            <Link key={c.id} href={`/colleges/${c.id}`} className="group min-w-0">
               <Card className="h-full p-4 transition group-hover:-translate-y-0.5 group-hover:border-brand">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex min-w-0 gap-3">

@@ -1,17 +1,17 @@
 "use client";
-import { Cloud, Laptop, ShieldOff } from "lucide-react";
+import { Cloud, ShieldOff, Trophy } from "lucide-react";
 import { useState } from "react";
 import { cx } from "../ui";
 
 const WHERE = [
-  { id: "device", icon: Laptop, title: "Stays on your device", items: ["Your Common App PDF", "The text we read from it, until you confirm"] },
-  { id: "account", icon: Cloud, title: "Saved to your account", items: ["Profile fields you confirmed", "Essays, tracker and roadmap progress", "Scholarship answers, privately"] },
+  { id: "account", icon: Cloud, title: "Saved to your account", items: ["Your profile and saved programs", "Essays, tracker and roadmap progress"] },
+  { id: "scholarships", icon: Trophy, title: "Only for scholarships", items: ["Citizenship or visa status", "City, background and family employers", "Used to hide awards you can't receive"] },
   { id: "never", icon: ShieldOff, title: "Never", items: ["Sold or shared", "Your visa status in reports or PDFs", "Used to train AI models"] },
 ] as const;
 
 /** Where each piece of a student's data goes. */
 export function PrivacyPanel() {
-  const [k, setK] = useState<(typeof WHERE)[number]["id"]>("device");
+  const [k, setK] = useState<(typeof WHERE)[number]["id"]>("account");
   const cur = WHERE.find((w) => w.id === k)!;
   return (
     <div className="lp-on-ivy rounded-3xl p-2">

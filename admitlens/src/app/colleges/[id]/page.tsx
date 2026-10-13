@@ -6,6 +6,7 @@ import { OfficialData } from "@/components/OfficialData";
 import { Badge, Button, ButtonLink, Card, CardHeader, categoryTone, fmtPct, Gauge, Stat } from "@/components/ui";
 import { collegeSatRange, evaluate, TIER_INFO } from "@/lib/engine";
 import { guessDeadline } from "@/lib/deadline";
+import { collegeForProgram } from "@/lib/programs";
 import { useStore } from "@/lib/store";
 import { useCollege } from "@/lib/useCollege";
 
@@ -14,10 +15,10 @@ const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 export default function CollegeDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { college, loading } = useCollege(decodeURIComponent(id));
-  const { profile, profileComplete, tracker, setTracker, dreamCollege, setDreamCollege, ready } = useStore();
+  const { profile, profileComplete, tracker, setTracker, dreamCollege, setDreamCollege, ready, programs } = useStore();
   if (loading || !ready) return <div className="py-24 text-center text-muted">Loading…</div>;
   if (!college) return <div className="py-24 text-center text-muted">College not found. <Link href="/colleges" className="text-brand">Back to colleges</Link></div>;
-  const ev = evaluate(profile, college);
+  const ev = evaluate(profile, collegeForProgram(college, programs));
   const sat = collegeSatRange(college);
   const inTracker = tracker.some((t) => t.collegeId === college.id);
   const fmtMoney = (n: number) => (n ? `$${n.toLocaleString()}` : "Tuition-free (service obligation)");

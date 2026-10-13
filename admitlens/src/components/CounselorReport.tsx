@@ -141,7 +141,7 @@ export function CounselorReport({ ev, profile }: { ev: Evaluation; profile: Prof
         <Card className="lg:col-span-3">
           <CardHeader title="Activity-by-activity read" subtitle={`How each activity reads at ${c.short}`} icon={<ListChecks size={16} />} />
           <div className="divide-y divide-line">
-            {ev.activityReads.length === 0 && <p className="px-5 py-4 text-sm text-muted">No activities on file. Upload your Common App or add them in your profile.</p>}
+            {ev.activityReads.length === 0 && <p className="px-5 py-4 text-sm text-muted">No activities on file yet. Add them in your profile.</p>}
             {ev.activityReads.map((a) => (
               <div key={a.id} className="px-5 py-3" data-testid="activity-read">
                 <div className="flex flex-wrap items-center justify-between gap-2">

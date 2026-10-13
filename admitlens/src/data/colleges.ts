@@ -31,6 +31,18 @@ export interface College {
   earlyRate?: number; // early-round admit rate when published
   inStateFactor?: number; // publics: multiplier on odds for residents vs. overall
   considersLegacy: boolean;
+  /** Set when the evaluation targets one school or program inside the university (see lib/programs). */
+  program?: {
+    id: string;
+    name: string;
+    kind: "standard" | "stem" | "business" | "arts" | "nursing";
+    requires?: string[];
+    review: string;
+    rateNote: string;
+    rateUrl?: string;
+    parentShort: string;
+    parentRate: number;
+  };
   deadlines: { early?: string; rd: string };
   url: string;
   knownFor: string[]; // flagship programs / resources — used to judge "why us" essays
@@ -51,6 +63,7 @@ export interface Verified {
 // Admit rates checked against the school or its student newspaper for the most recent
 // fully reported cycle. Everything else uses the latest Common Data Set and is labeled as such.
 const VERIFIED: Record<string, Verified> = {
+  nyu: { cycle: "Class of 2029", detail: "7.7% of 120,000+ applicants", source: "Washington Square News", url: "https://nyunews.com/news/2025/03/27/nyu-admission-rate-class-of-2029/" },
   harvard: { cycle: "Class of 2029", detail: "2,003 admitted of 47,893 applicants", source: "The Harvard Crimson", url: "https://www.thecrimson.com/article/2025/10/23/admissions-data-class-2029/", earlyFrom: "Class of 2028" },
   yale: { cycle: "Class of 2029", detail: "2,308 admitted of 50,227 applicants; single-choice early action 10.8%", source: "Yale Daily News", url: "https://yaledailynews.com/?p=197607" },
   princeton: { cycle: "Class of 2029", detail: "~4.4% of 42,303 applicants (faculty memo)", source: "The Daily Princetonian", url: "https://www.dailyprincetonian.com/article/2025/09/princeton-news-adpol-university-admits-4-percent-of-applicants-class-of-2029" },
@@ -120,7 +133,7 @@ const ROWS: Row[] = [
   ["umich","University of Michigan","Michigan","Ann Arbor","MI","Pu",33700,15.6,"1350-1530","31-34",3.9,"O",38000,"EA",null,0,"Nov 1","Feb 1","https://admissions.umich.edu","Ross School of Business;College of Engineering;LSA;UROP;huge alumni network","academic achievement;community;why Michigan specifically","community you belong to;why your chosen school or college",1.9],
   ["uva","University of Virginia","UVA","Charlottesville","VA","Pu",17500,16.3,"1410-1530","32-35",3.92,"O",40000,"ED,EA",null,0,"Nov 1","Jan 5","https://admission.virginia.edu","Honor System;Lawn rooms;McIntire;Jefferson Scholars;student self-governance","academic rigor;community contribution;honor","why UVA's specific school;short answers",1.9],
   ["unc","University of North Carolina at Chapel Hill","UNC","Chapel Hill","NC","Pu",20200,15.3,"1330-1500","29-34",3.9,"R",30000,"EA",null,0,"Oct 15","Jan 15","https://admissions.unc.edu","Morehead-Cain;Kenan-Flagler;research triangle;Carolina Covenant","academic excellence;character;contribution to NC","short answers on community and quality",2.6],
-  ["nyu","New York University","NYU","New York","NY","Pr",29500,9.2,"1500-1570","33-35",3.88,"O",93000,"ED,ED2",null,1,"Nov 1","Jan 5","https://www.nyu.edu/admissions","global campuses (Abu Dhabi, Shanghai);Stern;Tisch;Courant Institute;NYC","global outlook;urban engagement;fit with school","why NYU (optional)"],
+  ["nyu","New York University","NYU","New York","NY","Pr",29500,7.7,"1500-1570","33-35",3.88,"O",93000,"ED,ED2",null,1,"Nov 1","Jan 5","https://www.nyu.edu/admissions","global campuses (Abu Dhabi, Shanghai);Stern;Tisch;Courant Institute;NYC","global outlook;urban engagement;fit with school","why NYU (optional)"],
   ["bc","Boston College","Boston College","Chestnut Hill","MA","Pr",9600,15.0,"1450-1530","33-35",3.88,"R",88000,"ED,ED2",null,1,"Nov 1","Jan 2","https://www.bc.edu/admission","Jesuit formation;Carroll School of Management;PULSE program","men and women for others;intellectual and spiritual development","Jesuit-values essay"],
   ["bu","Boston University","Boston University","Boston","MA","Pr",18500,11.0,"1430-1530","32-34",3.88,"O",88000,"ED,ED2",null,1,"Nov 1","Jan 4","https://www.bu.edu/admissions","Kilachand Honors;Questrom;College of Engineering;study abroad","why BU;fit with school;community","why BU"],
   ["gatech","Georgia Institute of Technology","Georgia Tech","Atlanta","GA","Pu",19500,16.0,"1370-1530","31-35",3.95,"R",33000,"EA",null,0,"Oct 15","Jan 4","https://admission.gatech.edu","College of Computing;Create-X;co-op program;Atlanta tech scene","progress and service;rigor in math and science;fit with major","why your major at Georgia Tech",2.2],

@@ -1,7 +1,7 @@
 import "server-only";
 
 const MAX_BYTES = 900_000;
-const KEYS = ["profile", "tracker", "essays", "dreamCollege", "roadmapDone", "customAwards", "goals", "onboarded"] as const;
+const KEYS = ["profile", "tracker", "essays", "dreamCollege", "roadmapDone", "customAwards", "goals", "onboarded", "programs"] as const;
 
 /** Keeps only known top-level keys and caps size, so the account store holds app state and nothing else. */
 export function cleanData(raw: unknown): Record<string, unknown> | null {
