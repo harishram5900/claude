@@ -525,7 +525,8 @@ function writeMemo(p: Profile, c: College, tier: Tier, k: Core, rel: number) {
     ec = tier <= 3 ? `There are no activities listed. At ${c.short}, that alone would end the read.` : "No activities listed. That won't sink you here, but it leaves nothing to advocate for.";
     concerns.push("No activities listed.");
   } else {
-    ec = `${name}'s strongest commitment is ${top.role ? top.role + ", " : ""}${top.name} (${top.impact}-level impact, ${top.years} yr${top.years > 1 ? "s" : ""}, ~${top.hoursPerWeek} hrs/wk). `;
+    const facts = [`${top.impact}-level impact`, top.years ? `${top.years} yr${top.years > 1 ? "s" : ""}` : "", top.hoursPerWeek ? `~${top.hoursPerWeek} hrs/wk` : ""].filter(Boolean).join(", ");
+    ec = `${name}'s strongest commitment is ${top.role ? top.role + ", " : ""}${top.name} (${facts}). `;
     if (d.extracurriculars.z >= 0.6) ec += tier <= 2 ? "That's the kind of distinguishing depth that gets a file flagged for committee. " : "That clearly stands out in our pool. ";
     else if (d.extracurriculars.z >= -0.3) ec += tier <= 2 ? "It's solid, but I see this profile in a large share of files. What is the thing only you did? " : "It's a respectable profile for us. ";
     else ec += tier <= 2 ? `Compared with the ${c.short} pool, the activities read as participation more than impact. ` : "The activities section is thinner than most admits'. ";
@@ -688,7 +689,8 @@ function readActivities(p: Profile, c: College, tier: Tier): ActivityRead[] {
       else if (t === 3) bits.push(elite ? `Leadership at the school or local level is common in ${c.short}'s pool. It supports the file but won't distinguish it.` : "Solid leadership that helps your file.");
       else bits.push(elite ? `Membership alone carries little weight at ${c.short}.` : "Shows involvement; leadership or results would add weight.");
       if (a.years >= 3 && hrs >= 300) bits.push(`${a.years} years and about ${hrs} hours a year shows real commitment.`);
-      else if (a.years <= 1) bits.push("Only one year, so it reads as recent.");
+      else if (a.years === 1) bits.push("Only one year, so it reads as recent.");
+      else if (!a.years || !a.hoursPerWeek) bits.push("Years or hours are missing, so the reader can't judge your commitment. Add them in your profile.");
       else if (a.hoursPerWeek > 0 && a.hoursPerWeek < 2) bits.push("Under 2 hours a week reads as light involvement.");
       if (!a.description.trim()) bits.push("No description, so the reader can't see what you accomplished.");
       else if (!/\d/.test(a.description)) bits.push("The description has no numbers; add results (people served, money raised, ranks, members).");

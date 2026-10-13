@@ -26,7 +26,7 @@ const LABELS: Partial<Record<Key, string>> = {
   gpaWeighted: "Weighted GPA",
   classRankPercent: "Class rank (top %)",
   apCount: "AP / IB courses",
-  rigor: "Schedule rigor (estimate)",
+  rigor: "Schedule rigor",
   sat: "SAT",
   act: "ACT",
   activities: "Activities",
@@ -46,7 +46,7 @@ function describe(key: Key, v: unknown): React.ReactNode {
           <li key={a.id}>
             <span className="font-medium text-ink">{i + 1}. {a.name}</span>
             {a.role && <span> · {a.role}</span>}
-            <span className="text-xs"> · {a.category} · {a.years} yr · {a.hoursPerWeek} hr/wk · {a.weeksPerYear} wk/yr{a.leadership ? " · leadership" : ""}</span>
+            <span className="text-xs"> · {a.category} · {a.years || "?"} yr · {a.hoursPerWeek || "?"} hr/wk · {a.weeksPerYear || "?"} wk/yr{a.leadership ? " · leadership" : ""}</span>
             {a.description && <div className="text-xs">{a.description}</div>}
           </li>
         ))}
@@ -75,7 +75,7 @@ function describe(key: Key, v: unknown): React.ReactNode {
     return `${t.split(/\s+/).length} words: "${t.slice(0, 110)}…"`;
   }
   if (key === "classRankPercent") return `Top ${v}%`;
-  if (key === "rigor") return `${v === 5 ? "Most demanding" : "Strong"}. Adjust in Academics if your school offers more or fewer AP/IB courses.`;
+  if (key === "rigor") return `${["", "Minimal", "Some", "Average", "Strong", "Most demanding"][v as number]}, based on the AP/IB/dual-enrollment courses in your current-year course list. Adjust in Academics if your school offers few of them.`;
   if (typeof v === "boolean") return v ? "Yes" : "No";
   return String(v);
 }
@@ -88,17 +88,17 @@ export function CommonAppImport({ onApply, compact = false }: { onApply: (p: Par
   const [showPaste, setShowPaste] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [useAi, setUseAi] = useState(false);
-  const [pending, setPending] = useState<{ profile: Partial<Profile>; missing: string[]; fileName: string } | null>(null);
+  const [pending, setPending] = useState<{ profile: Partial<Profile>; missing: string[]; warnings: string[]; fileName: string } | null>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [done, setDone] = useState<string | null>(null);
 
-  const stage = (profile: Partial<Profile>, missing: string[], fileName: string) => {
+  const stage = (profile: Partial<Profile>, missing: string[], fileName: string, warnings: string[] = []) => {
     const keys = (Object.keys(profile) as Key[]).filter((k) => k in LABELS && profile[k] !== undefined && profile[k] !== null && !(k === "funding" && !Object.keys(profile.funding ?? {}).length));
     if (keys.length === 0) {
       setErr("We couldn't recognize any application fields in that file. Make sure it's the PDF from Common App's Preview, not a scanned image.");
       return;
     }
-    setPending({ profile, missing, fileName });
+    setPending({ profile, missing, warnings, fileName });
     setSelected(Object.fromEntries(keys.map((k) => [k, true])));
   };
 
@@ -151,7 +151,7 @@ export function CommonAppImport({ onApply, compact = false }: { onApply: (p: Par
       }
     }
     const r = parseCommonApp(text);
-    stage(Object.keys(r.funding).length ? { ...r.profile, funding: r.funding as Profile["funding"] } : r.profile, r.missing, fileName);
+    stage(Object.keys(r.funding).length ? { ...r.profile, funding: r.funding as Profile["funding"] } : r.profile, r.missing, fileName, r.warnings);
     setBusy(null);
   };
 
@@ -285,6 +285,16 @@ export function CommonAppImport({ onApply, compact = false }: { onApply: (p: Par
               </label>
             ))}
           </div>
+          {pending.warnings.length > 0 && (
+            <div className="space-y-1.5 border-t border-line bg-warn-soft/40 px-6 py-3 text-xs text-warn" data-testid="ca-warnings">
+              <div className="font-semibold">Check these after applying</div>
+              {pending.warnings.map((w) => (
+                <p key={w} className="flex gap-1.5">
+                  <AlertTriangle size={13} className="mt-0.5 shrink-0" /> {w}
+                </p>
+              ))}
+            </div>
+          )}
           {(onlyWeighted || pending.missing.length > 0) && (
             <div className="space-y-1 border-t border-line px-6 py-3 text-xs text-muted">
               {onlyWeighted && <p>Your Common App lists a weighted GPA only. After applying, add your unweighted GPA in Academics. Readers compare unweighted GPAs across schools.</p>}

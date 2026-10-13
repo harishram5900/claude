@@ -25,10 +25,10 @@ function ActivityRow({ a, onChange, onRemove, index }: { a: Activity; onChange: 
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Activity / organization">
-          <input className={inputCls} value={a.name} onChange={(e) => set("name", e.target.value)} placeholder="Robotics Team" />
+          <input className={inputCls} value={a.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Robotics Team" />
         </Field>
         <Field label="Your role">
-          <input className={inputCls} value={a.role} onChange={(e) => set("role", e.target.value)} placeholder="Captain" />
+          <input className={inputCls} value={a.role} onChange={(e) => set("role", e.target.value)} placeholder="e.g. Captain" />
         </Field>
         <Field label="Reach / impact level" hint="The widest level your work reached">
           <select className={inputCls} value={a.impact} onChange={(e) => set("impact", e.target.value as Activity["impact"])}>
@@ -51,7 +51,7 @@ function ActivityRow({ a, onChange, onRemove, index }: { a: Activity; onChange: 
           </Field>
         </div>
         <Field label="Description (150 characters, like Common App)" className="sm:col-span-2">
-          <input className={inputCls} maxLength={150} value={a.description} onChange={(e) => set("description", e.target.value)} placeholder="Led 24-member team to state finals; taught CAD workshops to 60 middle schoolers." />
+          <input className={inputCls} maxLength={150} value={a.description} onChange={(e) => set("description", e.target.value)} placeholder="What you did and what came of it, with numbers" />
         </Field>
       </div>
       <div className="mt-3 flex flex-wrap gap-4 text-sm">
@@ -111,7 +111,7 @@ export default function ProfilePage() {
               </select>
             </Field>
             <Field label="Intended major">
-              <input className={inputCls} value={p.intendedMajor} onChange={(e) => set("intendedMajor", e.target.value)} placeholder="Computer Science" />
+              <input className={inputCls} value={p.intendedMajor} onChange={(e) => set("intendedMajor", e.target.value)} placeholder="e.g. Computer Science" />
             </Field>
             <Field label="High school" className="sm:col-span-2">
               <input className={inputCls} value={p.highSchool} onChange={(e) => set("highSchool", e.target.value)} />
@@ -142,13 +142,13 @@ export default function ProfilePage() {
           <CardHeader title="Academics" subtitle="Readers check GPA against how hard your schedule was" icon={<BookOpen size={16} />} />
           <div className="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4">
             <Field label="Unweighted GPA (4.0 scale)">
-              <input type="number" step="0.01" min={0} max={4} className={inputCls} value={p.gpaUnweighted ?? ""} onChange={(e) => set("gpaUnweighted", numOrNull(e.target.value))} placeholder="3.85" />
+              <input type="number" step="0.01" min={0} max={4} className={inputCls} value={p.gpaUnweighted ?? ""} onChange={(e) => set("gpaUnweighted", numOrNull(e.target.value))} placeholder="Not entered" />
             </Field>
             <Field label="Weighted GPA">
-              <input type="number" step="0.01" min={0} max={5.5} className={inputCls} value={p.gpaWeighted ?? ""} onChange={(e) => set("gpaWeighted", numOrNull(e.target.value))} placeholder="4.30" />
+              <input type="number" step="0.01" min={0} max={5.5} className={inputCls} value={p.gpaWeighted ?? ""} onChange={(e) => set("gpaWeighted", numOrNull(e.target.value))} placeholder="Not entered" />
             </Field>
             <Field label="Class rank: top __%" hint="Leave blank if your school doesn't rank">
-              <input type="number" min={1} max={100} className={inputCls} value={p.classRankPercent ?? ""} onChange={(e) => set("classRankPercent", numOrNull(e.target.value))} placeholder="5" />
+              <input type="number" min={1} max={100} className={inputCls} value={p.classRankPercent ?? ""} onChange={(e) => set("classRankPercent", numOrNull(e.target.value))} placeholder="Not entered" />
             </Field>
             <Field label="AP / IB / dual-enrollment courses" hint="Completed + in progress">
               <input type="number" min={0} max={25} className={inputCls} value={p.apCount} onChange={(e) => set("apCount", Number(e.target.value))} />
@@ -168,10 +168,10 @@ export default function ProfilePage() {
           </div>
           <div className="grid gap-4 border-t border-line p-5 sm:grid-cols-2 lg:grid-cols-4">
             <Field label="SAT (best total)">
-              <input type="number" min={400} max={1600} step={10} className={inputCls} value={p.sat ?? ""} onChange={(e) => set("sat", numOrNull(e.target.value))} placeholder="1450" />
+              <input type="number" min={400} max={1600} step={10} className={inputCls} value={p.sat ?? ""} onChange={(e) => set("sat", numOrNull(e.target.value))} placeholder="Not entered" />
             </Field>
             <Field label="ACT (composite)">
-              <input type="number" min={1} max={36} className={inputCls} value={p.act ?? ""} onChange={(e) => set("act", numOrNull(e.target.value))} placeholder="32" />
+              <input type="number" min={1} max={36} className={inputCls} value={p.act ?? ""} onChange={(e) => set("act", numOrNull(e.target.value))} placeholder="Not entered" />
             </Field>
             <Field label="Submit scores?" className="sm:col-span-2" hint="Test-optional schools only see scores you choose to send">
               <div className="flex gap-1 rounded-xl border border-line bg-surface-2 p-1">
@@ -222,7 +222,7 @@ export default function ProfilePage() {
             {p.awards.length === 0 && <p className="text-sm text-muted">No honors yet. School-level counts too.</p>}
             {p.awards.map((a) => (
               <div key={a.id} className="flex gap-2">
-                <input className={inputCls} value={a.name} onChange={(e) => set("awards", p.awards.map((x) => (x.id === a.id ? { ...x, name: e.target.value } : x)))} placeholder="National Merit Commended Scholar" />
+                <input className={inputCls} value={a.name} onChange={(e) => set("awards", p.awards.map((x) => (x.id === a.id ? { ...x, name: e.target.value } : x)))} placeholder="e.g. National Merit Commended Scholar" />
                 <select className={cx(inputCls, "w-40")} value={a.level} onChange={(e) => set("awards", p.awards.map((x) => (x.id === a.id ? { ...x, level: e.target.value as Award["level"] } : x)))}>
                   {["school", "regional", "state", "national", "international"].map((l) => <option key={l} value={l}>{l[0].toUpperCase() + l.slice(1)}</option>)}
                 </select>
