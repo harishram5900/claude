@@ -1,6 +1,7 @@
 "use client";
 import { AlarmClock, ArrowRight, ClipboardList, GraduationCap, Heart, Map, PenLine, Sparkles, Trophy } from "lucide-react";
 import Link from "next/link";
+import { OllieSays } from "@/components/Ollie";
 import { Badge, Button, ButtonLink, Card, CardHeader, categoryTone, Empty, fmtPct, Gauge, PageHeader, Progress } from "@/components/ui";
 import { getCollege } from "@/data/colleges";
 import { analyzeEssay } from "@/lib/essay";
@@ -53,6 +54,13 @@ export default function Dashboard() {
   return (
     <div className="rise">
       <PageHeader eyebrow="Dashboard" title={`Hi${profile.name ? `, ${profile.name.split(" ")[0]}` : ""}`} subtitle="Here's where your applications stand today." />
+      <OllieSays className="mb-6" mood={profileComplete >= 80 ? "happy" : "think"}>
+        {profileComplete >= 80 ? (
+          <>Your file is in good shape. See where you sit against each admitted class in <Link href="/admits" className="font-medium text-brand hover:underline">Admit Profiles</Link>.</>
+        ) : (
+          <>Your profile is {profileComplete}% complete. The more I know, the sharper my read. <Link href="/profile" className="font-medium text-brand hover:underline">Finish it</Link>.</>
+        )}
+      </OllieSays>
       {!onboarded && (
         <Card className="mb-6 flex flex-wrap items-center justify-between gap-3 p-5">
           <div className="text-sm">Finish setting up: answer a few quick questions about you.</div>

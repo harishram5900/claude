@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { LogoMark } from "@/components/Logo";
+import { Ollie } from "@/components/Ollie";
 import { MainShell } from "@/components/MainShell";
 import { Nav } from "@/components/Nav";
 import { themeScript } from "@/components/ThemeToggle";
@@ -42,13 +43,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <LogoMark size={26} />
                   <span className="font-display text-lg font-semibold">AdmitLens</span>
                 </div>
+                <div className="mt-3 flex items-center gap-2 text-sm">
+                  <Ollie mood="wave" size={44} />
+                  <span className="text-muted">Ollie the owl reads every file twice.</span>
+                </div>
                 <p className="mt-3 max-w-xs text-sm text-muted">
                   Admissions evaluations built on each college's published data, plus scholarships matched to you. Estimates, not decisions. Not affiliated with any college or with Common App.
                 </p>
               </div>
               {[
-                ["Plan", [["Evaluation", "/evaluate"], ["Roadmap", "/roadmap"], ["Tracker", "/tracker"]]],
-                ["Write & fund", [["Essay Lab", "/essays"], ["Scholarships", "/scholarships"], ["Learn from real admits", "/learn"]]],
+                ["Plan", [["Chance Me", "/evaluate"], ["Admit Profiles", "/admits"], ["Roadmap", "/roadmap"], ["Tracker", "/tracker"]]],
+                ["Write & fund", [["Essay Lab", "/essays"], ["Scholarships", "/scholarships"], ["Essays that worked", "/learn"]]],
                 ["About", [["How it works", "/about"], ["Your data & privacy", "/about#privacy"], ["Colleges", "/colleges"]]],
               ].map(([h, links]) => (
                 <div key={h as string}>

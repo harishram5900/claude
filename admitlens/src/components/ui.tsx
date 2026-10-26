@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
+import { Ollie } from "./Ollie";
 
 export function cx(...c: (string | false | null | undefined)[]) {
   return c.filter(Boolean).join(" ");
@@ -129,7 +130,10 @@ export function PageHeader({ eyebrow, title, subtitle, action }: { eyebrow?: str
 export function Empty({ icon, title, body, action }: { icon: ReactNode; title: string; body: string; action?: ReactNode }) {
   return (
     <div className="grid place-items-center rounded-2xl border border-dashed border-line px-6 py-14 text-center">
-      <div className="mb-3 grid h-12 w-12 place-items-center rounded-xl bg-brand-soft text-brand">{icon}</div>
+      <div className="relative mb-3">
+        <Ollie mood="think" size={88} />
+        <span className="absolute -bottom-1 -right-2 grid h-8 w-8 place-items-center rounded-full bg-brand-soft text-brand ring-4 ring-[var(--bg)]">{icon}</span>
+      </div>
       <h3 className="font-semibold">{title}</h3>
       <p className="mt-1 max-w-sm text-sm text-muted">{body}</p>
       {action && <div className="mt-4">{action}</div>}

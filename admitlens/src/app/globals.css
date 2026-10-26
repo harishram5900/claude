@@ -219,3 +219,18 @@ body {
 }
 .lp-noscroll::-webkit-scrollbar { display: none; }
 .lp-noscroll { scrollbar-width: none; }
+
+/* Ollie the owl */
+@keyframes ollie-wave {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-14deg); }
+}
+@keyframes ollie-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.ollie-wave { animation: ollie-wave 1.6s ease-in-out infinite; }
+.ollie-bob { animation: ollie-bob 4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .ollie-wave, .ollie-bob { animation: none; }
+}

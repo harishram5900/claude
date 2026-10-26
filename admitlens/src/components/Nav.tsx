@@ -1,5 +1,5 @@
 "use client";
-import { BookOpenCheck, Building2, Check, ClipboardList, CloudOff, Gauge, GraduationCap, Library, Loader2, LogOut, Map, Menu, PenLine, Trophy, User, X } from "lucide-react";
+import { BookOpenCheck, Building2, ChartColumn, Check, ClipboardList, CloudOff, Gauge, GraduationCap, Library, Loader2, LogOut, Map, Menu, PenLine, Trophy, User, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -10,7 +10,8 @@ import { cx } from "./ui";
 
 export const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: Gauge },
-  { href: "/evaluate", label: "Evaluation", icon: GraduationCap },
+  { href: "/evaluate", label: "Chance Me", icon: GraduationCap },
+  { href: "/admits", label: "Admit Profiles", icon: ChartColumn },
   { href: "/scholarships", label: "Scholarships", icon: Trophy },
   { href: "/essays", label: "Essays", icon: PenLine },
   { href: "/colleges", label: "Colleges", icon: Building2 },
@@ -89,7 +90,7 @@ export function Nav() {
       </header>
     );
   }
-  const links = user || (ready && !accountsAvailable) ? NAV : NAV.filter((n) => ["/colleges", "/learn"].includes(n.href));
+  const links = user || (ready && !accountsAvailable) ? NAV : NAV.filter((n) => ["/admits", "/colleges", "/learn"].includes(n.href));
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-bg/80 backdrop-blur-xl print:hidden">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6">

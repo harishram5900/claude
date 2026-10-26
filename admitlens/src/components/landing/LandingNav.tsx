@@ -10,7 +10,7 @@ import { cx } from "../ui";
 const LINKS: [string, string][] = [
   ["How it works", "#how"],
   ["For every grade", "#grades"],
-  ["Privacy", "#privacy"],
+  ["Admit profiles", "/admits"],
   ["Colleges", "/colleges"],
   ["FAQ", "#faq"],
 ];

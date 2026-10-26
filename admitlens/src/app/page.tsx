@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowUpRight, Check, GraduationCap, Map, PenLine, Trophy } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BookOpenText, Building2, ChartColumn, Check, ClipboardList, GraduationCap, Map, PenLine, Trophy } from "lucide-react";
 import Link from "next/link";
 import { ProgramsDemo } from "@/components/landing/ProgramsDemo";
 import { LandingNav } from "@/components/landing/LandingNav";
@@ -7,6 +7,7 @@ import { Phone, Ring } from "@/components/landing/Phone";
 import { PrivacyPanel } from "@/components/landing/PrivacyPanel";
 import { ReadersCarousel } from "@/components/landing/ReadersCarousel";
 import { Reveal } from "@/components/landing/Reveal";
+import { Ollie } from "@/components/Ollie";
 import { EvalScreen, NoteScreen, ProfileScreen, RetryScreen, RoadmapScreen, ScholarshipScreen } from "@/components/landing/Screens";
 import { COLLEGES } from "@/data/colleges";
 import { FUNDING_LIBRARY } from "@/data/funding";
@@ -24,9 +25,22 @@ const FAQ: [string, string][] = [
   ["Does my major change my chances?", "At universities that admit by school or major, yes. NYU Stern, UIUC Computer Science and Berkeley EECS admit far fewer students than their universities overall, and drama or film programs decide mainly on auditions and portfolios. Pick the program and the evaluation changes with it. Where a program's admit rate is published we use it and cite the source; where it isn't, we say so."],
   ["Why do you ask about citizenship or visa status?", "Many scholarships are limited to citizens, permanent residents or specific statuses. Your answer only hides awards you can't receive. It's optional, and it never appears in a report or PDF."],
   ["Is AdmitLens free?", "Yes. There's nothing to buy and no premium tier."],
+  ["Who is Ollie?", "Ollie is the AdmitLens owl. Owls read carefully, and Ollie's glasses are the lens in AdmitLens. You'll see Ollie wherever there's a tip worth knowing."],
+  ["Are the admit profiles real students?", "No individual student is shown, and none is invented. Admit profiles are the published numbers for each admitted class: admit rates, middle-50% scores, typical GPAs and program-level rates where a university publishes them, each with its source."],
   ["Will it write my essays?", "No. It shows what's working and what isn't, line by line, and how a revision changes your odds. The words stay yours, which is what colleges expect."],
   ["Which colleges can I be evaluated for?", `${COLLEGES.length} colleges are profiled in depth, and any of the 6,000+ U.S. colleges in the Department of Education's College Scorecard can be searched and evaluated.`],
   ["I'm not a senior yet. Is this for me?", "Yes. 9th to 11th graders get a grade-by-grade roadmap built from what their dream school's readers look for, plus scholarships they can start on now."],
+];
+
+const FEATURES = [
+  { icon: GraduationCap, title: "Chance Me", body: "Your odds at any college and program, rated 1 to 6 by its own kind of reader, with a written review.", href: "/evaluate", tone: "bg-brand-soft text-brand" },
+  { icon: ChartColumn, title: "Admit Profiles", body: "Score ranges, GPAs and admit rates of the classes colleges actually admitted, with you marked on them.", href: "/admits", tone: "bg-warn-soft text-warn" },
+  { icon: PenLine, title: "Essay Lab", body: "Line-by-line feedback on voice, specificity and reflection, re-scored every draft.", href: "/essays", tone: "bg-bad-soft text-bad" },
+  { icon: BookOpenText, title: "Essays that worked", body: "Real essays by admitted students, published by the colleges themselves.", href: "/learn", tone: "bg-good-soft text-good" },
+  { icon: Trophy, title: "Scholarships", body: "Matched to your GPA, state, grade and visa status, closest to home first.", href: "/scholarships", tone: "bg-warn-soft text-warn" },
+  { icon: ClipboardList, title: "List tracker", body: "Reaches, targets and safeties with deadlines and status, all in one list.", href: "/tracker", tone: "bg-brand-soft text-brand" },
+  { icon: Map, title: "Roadmap", body: "A grade-by-grade plan from 9th grade on, prioritized by your dream school.", href: "/roadmap", tone: "bg-good-soft text-good" },
+  { icon: Building2, title: "6,000+ colleges", body: "Every U.S. college in the Department of Education's Scorecard, searchable live.", href: "/colleges", tone: "bg-bad-soft text-bad" },
 ];
 
 const PRIVACY = ["Your profile saves privately to your account", "Your visa answer only filters scholarships", "Passwords are hashed; sessions are signed", "Nothing is sold, shared or used for ads"];
@@ -64,21 +78,32 @@ export default function Home() {
       {/* Hero */}
       <section className="relative px-4 pb-16 pt-32 sm:px-6 sm:pt-40">
         <div className="grid-bg absolute inset-0 opacity-50 [mask-image:radial-gradient(60%_55%_at_50%_25%,black,transparent)]" aria-hidden />
-        <Reveal className="relative mx-auto max-w-4xl text-center">
-          <div className="eyebrow">Admissions reads and scholarships</div>
-          <h1 className="font-display mt-6 text-5xl font-medium leading-[1.02] tracking-tight sm:text-7xl">
-            Your first read shouldn’t be the <em className="text-brand">real</em> one.
-          </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted">
-            Enter your application once and have it read the way your dream school's office reads it, down to the program you're applying to: rated, questioned and given a verdict. Then see every scholarship you actually qualify for, visa status included.
-          </p>
-          <div className="mt-9 flex flex-wrap justify-center gap-3">
-            <Link href="/start" className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3.5 text-[15px] font-medium text-[var(--surface)] shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] transition hover:brightness-110">
-              Get started free <ArrowRight size={17} />
-            </Link>
-            <Link href="/signin" className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-6 py-3.5 text-[15px] font-medium transition hover:bg-surface-2">
-              I have an account
-            </Link>
+        <Reveal className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.25fr_0.75fr]">
+          <div className="text-center lg:text-left">
+            <div className="eyebrow">Chance me · Admit profiles · Essays · Scholarships</div>
+            <h1 className="font-display mt-6 text-5xl font-medium leading-[1.02] tracking-tight sm:text-7xl">
+              Your first read shouldn’t be the <em className="text-brand">real</em> one.
+            </h1>
+            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted lg:mx-0">
+              Meet Ollie, your admissions owl. Enter your application once and Ollie reads it the way your dream school's office does, down to the program you're applying to. Then compare yourself with the classes colleges actually admitted and see every scholarship you qualify for.
+            </p>
+            <div className="mt-9 flex flex-wrap justify-center gap-3 lg:justify-start">
+              <Link href="/start" className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3.5 text-[15px] font-medium text-[var(--surface)] shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] transition hover:brightness-110">
+                Get started free <ArrowRight size={17} />
+              </Link>
+              <Link href="/admits" className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-6 py-3.5 text-[15px] font-medium transition hover:bg-surface-2">
+                See who gets in
+              </Link>
+            </div>
+          </div>
+          <div className="relative mx-auto flex flex-col items-center">
+            <div className="relative mb-2 max-w-[260px] rounded-2xl rounded-br-md border border-line bg-surface px-4 py-3 text-sm leading-relaxed shadow-card">
+              Hoo! I've read {COLLEGES.length} colleges' admitted classes so you don't walk in blind.
+            </div>
+            <div className="ollie-bob">
+              <Ollie mood="wave" size={260} />
+            </div>
+            <div className="mt-1 h-4 w-40 rounded-[50%] bg-ink/10 blur-sm" aria-hidden />
           </div>
         </Reveal>
 
@@ -116,6 +141,32 @@ export default function Home() {
               <div className="text-xs text-muted">{s}</div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Everything in one place */}
+      <section id="features" className="scroll-mt-24 px-4 py-20 sm:px-6 sm:py-24">
+        <div className="mx-auto max-w-6xl">
+          <Reveal className="flex flex-col items-center gap-6 text-center md:flex-row md:items-end md:justify-between md:text-left">
+            <SectionHead eyebrow="Everything in one place" title="One profile. Eight tools. Zero guesswork." body="Everything you need from your first list to decision day, in one app and built on published data." />
+            <Ollie mood="reading" size={120} className="hidden md:block" />
+          </Reveal>
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {FEATURES.map((f, i) => (
+              <Reveal key={f.title} delay={(i % 4) * 60}>
+                <Link href={f.href} className="group flex h-full flex-col rounded-[1.5rem] border border-line bg-surface p-5 shadow-card transition hover:-translate-y-0.5 hover:border-brand">
+                  <span className={`grid h-11 w-11 place-items-center rounded-2xl ${f.tone}`}>
+                    <f.icon size={20} />
+                  </span>
+                  <h3 className="font-display mt-4 text-xl font-semibold tracking-tight">{f.title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted">{f.body}</p>
+                  <span className="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-medium text-brand">
+                    Open <ArrowRight size={14} className="transition group-hover:translate-x-0.5" />
+                  </span>
+                </Link>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -310,6 +361,7 @@ export default function Home() {
       {/* Final CTA */}
       <section className="px-4 pb-24 sm:px-6">
         <Reveal className="paper relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] border border-line px-8 py-16 text-center shadow-card">
+          <div className="mb-4 flex justify-center"><Ollie mood="cheer" size={120} /></div>
           <div className="eyebrow">Start here</div>
           <h2 className="font-display mx-auto mt-4 max-w-2xl text-4xl font-medium tracking-tight sm:text-5xl">Your dream school is a plan, not a lottery ticket.</h2>
           <p className="mx-auto mt-4 max-w-xl text-muted">A one-minute questionnaire, then enter your application once. Every college and program uses it.</p>
