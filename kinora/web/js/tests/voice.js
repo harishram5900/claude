@@ -7,6 +7,31 @@ function toMono16k(data, rate) {
   return { data: out, rate: rate / k };
 }
 
+// Cycle-to-cycle perturbation in the stable part of a vowel: local jitter (period) and shimmer (peak amplitude),
+// the same definitions used by MDVP/Praat in the UCI Parkinson's voice studies.
+export function perturbation(x, rate, f0) {
+  const T0 = rate / f0, peaks = [];
+  let i = 0, best = 0; for (let k = 0; k < Math.min(x.length, Math.round(T0 * 1.5)); k++) if (x[k] > x[best]) best = k; i = best;
+  while (i + T0 * 1.3 < x.length) {
+    peaks.push(i);
+    const lo = Math.round(i + T0 * 0.8), hi = Math.round(i + T0 * 1.2); let m = lo;
+    for (let k = lo; k <= hi; k++) if (x[k] > x[m]) m = k;
+    i = m;
+  }
+  const P = [], A = [];
+  for (let k = 0; k < peaks.length; k++) {
+    const j = peaks[k], a = x[j - 1] ?? x[j], b = x[j], c = x[j + 1] ?? x[j], d = a - 2 * b + c, sh = d ? 0.5 * (a - c) / d : 0;
+    P.push(j + sh); A.push(b - 0.25 * (a - c) * sh);
+  }
+  const T = []; for (let k = 1; k < P.length; k++) T.push(P[k] - P[k - 1]);
+  const okT = T.filter((t) => t > T0 * 0.7 && t < T0 * 1.3); if (okT.length < 20) return null;
+  let dj = 0; for (let k = 1; k < okT.length; k++) dj += Math.abs(okT[k] - okT[k - 1]);
+  let ds = 0; for (let k = 1; k < A.length; k++) ds += Math.abs(A[k] - A[k - 1]);
+  const jitter = dj / (okT.length - 1) / mean(okT), shimmer = ds / (A.length - 1) / mean(A.map(Math.abs));
+  // outside what any sustained human vowel produces (UCI maxima: jitter 3.3%, shimmer 11.9%) means the cycle tracking failed
+  return jitter < 0.05 && shimmer < 0.2 ? { jitter, shimmer } : null;
+}
+
 export function voiceMetrics({ data, rate }) {
   const a = toMono16k(data, rate), fl = Math.round(0.04 * a.rate), hop = Math.round(0.01 * a.rate), frames = [];
   for (let i = 0; i + fl <= a.data.length; i += hop) {
@@ -18,11 +43,15 @@ export function voiceMetrics({ data, rate }) {
   if (voiced.length < 30) return null;
   const core = voiced.slice(Math.floor(voiced.length * 0.1), Math.ceil(voiced.length * 0.9));   // drop onset and offset
   const f0 = core.map((f) => f.p.f0), rms = core.map((f) => f.rms);
+  const i0 = frames.indexOf(core[0]) * hop, i1 = frames.indexOf(core[core.length - 1]) * hop + fl;
+  const pert = perturbation(a.data.subarray(i0, i1), a.rate, median(f0));
   return {
     f0: median(f0),                                                  // typical pitch, Hz
     pitchCV: cv(f0),                                                 // pitch steadiness (lower is steadier)
     loudCV: cv(rms),                                                 // loudness steadiness
     hnr: mean(core.map((f) => 10 * Math.log10(f.p.r / (1 - f.p.r)))),  // harmonics-to-noise ratio, dB (higher is clearer)
+    jitter: pert ? pert.jitter * 100 : NaN,                          // local jitter, % (UCI PD median 0.55, controls 0.37)
+    shimmer: pert ? pert.shimmer * 100 : NaN,                        // local shimmer, % (UCI PD median 3.0, controls 1.6)
     levelDb: 20 * Math.log10(median(rms)),                           // level relative to the device's full scale
     seconds: voiced.length * 0.01
   };

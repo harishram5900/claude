@@ -27,6 +27,8 @@ export function spiralMetrics(pts, sp) {
   return {
     errorPct: 100 * mean(e.map(Math.abs)) / sp.R,           // mean distance from the guide, % of spiral radius
     tremorPx,                                              // RMS of the fast (>~2.5 Hz) wobble, in pixels
+    tremorPct: 100 * tremorPx / sp.R,                       // same, as % of spiral radius (comparable across screens)
+    pressureCV: (() => { const p = pts.map((q) => q.pressure).filter((v) => v > 0 && v < 1); return p.length > 30 && new Set(p.map((v) => v.toFixed(3))).size > 5 ? Math.sqrt(mean(p.map((v) => (v - mean(p)) ** 2))) / mean(p) : NaN; })(), // stylus only
     tremorHz: tremorPx > 0.5 ? peakFreq(sp2, 3, 12) : NaN, // dominant wobble frequency
     speed: len / Math.max(dur, 0.1),                        // px per second
     seconds: dur,
@@ -55,7 +57,7 @@ export function run(stage, { hand }) {
     cv.addEventListener('pointermove', (e) => {
       if (!drawing) return;
       const ev = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
-      for (const c of ev) pts.push({ t: (c.timeStamp || performance.now()) - t0, ...pos(c) });
+      for (const c of ev) pts.push({ t: (c.timeStamp || performance.now()) - t0, pressure: c.pointerType === 'pen' ? c.pressure : undefined, ...pos(c) });
       drawGuide(); drawInk();
     });
     const end = () => { if (!drawing) return; drawing = false; root.querySelector('[data-done]').disabled = pts.length < 30; };

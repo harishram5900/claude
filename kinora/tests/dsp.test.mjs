@@ -4,6 +4,7 @@ import { tapMetrics } from '../web/js/tests/tap.js';
 import { spiralMetrics, spiralTemplate } from '../web/js/tests/spiral.js';
 import { tremorMetrics } from '../web/js/tests/tremor.js';
 import { voiceMetrics } from '../web/js/tests/voice.js';
+import { typingMetrics } from '../web/js/tests/typing.js';
 let pass = 0, fail = 0;
 const test = (name, fn) => { try { fn(); pass++; console.log('ok  ', name); } catch (e) { fail++; console.log('FAIL', name, '\n     ', e.message); } };
 const rng = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)(7);
@@ -37,4 +38,16 @@ const vowel = (wob) => { const rate = 16000, n = rate * 3, a = new Float32Array(
 test('voice: steady vowel has the right pitch and low instability', () => { const m = voiceMetrics(vowel(0)); assert.ok(Math.abs(m.f0 - 140) < 2, m.f0); assert.ok(m.pitchCV < 0.01, m.pitchCV); assert.ok(m.hnr > 15, m.hnr); });
 test('voice: wobbling vowel scores more pitch and loudness instability', () => { const a = voiceMetrics(vowel(0)), b = voiceMetrics(vowel(0.04)); assert.ok(b.pitchCV > a.pitchCV * 3, `${b.pitchCV} vs ${a.pitchCV}`); assert.ok(b.loudCV > a.loudCV, `${b.loudCV} vs ${a.loudCV}`); });
 
+test('voice: clean vowel has near-zero jitter and shimmer', () => { const m = voiceMetrics(vowel(0)); assert.ok(m.jitter < 0.2, m.jitter); assert.ok(m.shimmer < 0.5, m.shimmer); });
+test('voice: perturbed vowel has measurable jitter and shimmer', () => {
+  const rate = 16000, n = rate * 3, a = new Float32Array(n); let i = 0;
+  while (i < n) { const T = Math.round(rate / 130 * (1 + 0.012 * (rng() - 0.5) * 2)), amp = 0.5 * (1 + 0.06 * (rng() - 0.5) * 2); for (let k = 0; k < T && i < n; k++, i++) a[i] = amp * (Math.sin(2 * Math.PI * k / T) + 0.3 * Math.sin(4 * Math.PI * k / T)); }
+  const m = voiceMetrics({ data: a, rate }); assert.ok(m.jitter > 0.3 && m.jitter < 1.5, m.jitter); assert.ok(m.shimmer > 1.5 && m.shimmer < 5, m.shimmer); });
+test('typing: brisk typist vs one with long, irregular holds', () => {
+  const brisk = typingMetrics(Array.from({ length: 300 }, () => 85 + 20 * (rng() - 0.5)));
+  const slow = typingMetrics(Array.from({ length: 300 }, () => (rng() < 0.12 ? 260 : 120) + 60 * (rng() - 0.5)));
+  assert.ok(Math.abs(brisk.median - 85) < 3, brisk.median); assert.equal(brisk.longShare, 0);
+  assert.ok(slow.longShare > 8 && slow.longShare < 16, slow.longShare); assert.ok(slow.iqr > brisk.iqr * 2, `${slow.iqr} vs ${brisk.iqr}`); });
+test('typing: too few keys returns nothing', () => { assert.equal(typingMetrics([100, 110, 90]), null); });
+test('spiral: tremor is also reported as % of radius', () => { const m = spiralMetrics(trace(4), sp); assert.ok(Math.abs(m.tremorPct - 100 * m.tremorPx / sp.R) < 1e-9); });
 console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);

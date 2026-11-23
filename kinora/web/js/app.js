@@ -2,6 +2,8 @@ import * as Tap from './tests/tap.js';
 import * as Spiral from './tests/spiral.js';
 import * as Tremor from './tests/tremor.js';
 import * as Voice from './tests/voice.js';
+import * as Typing from './tests/typing.js';
+import { loadResearch, refFor, dotPlot, researchPage } from './research.js';
 import { median, mean, cv } from './dsp.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -22,11 +24,16 @@ const METRICS = [
   { key: 'tapL.rate', label: 'Tapping speed, left', unit: 'taps/s', f: fmt.rate, better: 'up' },
   { key: 'tapR.rhythmCV', label: 'Tapping rhythm variability, right', unit: '', f: fmt.pct, better: 'down' },
   { key: 'tapL.rhythmCV', label: 'Tapping rhythm variability, left', unit: '', f: fmt.pct, better: 'down' },
-  { key: 'spiral.tremorPx', label: 'Spiral tremor', unit: 'px', f: fmt.px, better: 'down' },
+  { key: 'spiral.tremorPct', label: 'Spiral tremor', unit: '% of radius', f: (v) => v.toFixed(2), better: 'down' },
   { key: 'spiral.errorPct', label: 'Spiral accuracy (error)', unit: '% of radius', f: (v) => v.toFixed(1), better: 'down' },
   { key: 'tremor.tremorRms', label: 'Rest tremor', unit: 'm/s²', f: fmt.ms2, better: 'down' },
   { key: 'voice.pitchCV', label: 'Voice pitch variability', unit: '', f: fmt.pct, better: 'down' },
-  { key: 'voice.hnr', label: 'Voice clarity (HNR)', unit: 'dB', f: fmt.db, better: 'up' }
+  { key: 'voice.hnr', label: 'Voice clarity (HNR)', unit: 'dB', f: fmt.db, better: 'up' },
+  { key: 'voice.jitter', label: 'Voice jitter', unit: '%', f: (v) => v.toFixed(2), better: 'down' },
+  { key: 'voice.shimmer', label: 'Voice shimmer', unit: '%', f: (v) => v.toFixed(2), better: 'down' },
+  { key: 'typing.longShare', label: 'Typing: slow key presses', unit: '% of keys', f: (v) => v.toFixed(1), better: 'down' },
+  { key: 'typing.iqr', label: 'Typing: hold-time spread', unit: 'ms', f: (v) => v.toFixed(0), better: 'down' },
+  { key: 'typing.median', label: 'Typing: median hold time', unit: 'ms', f: (v) => v.toFixed(0), better: 'down' }
 ];
 const get = (c, k) => k.split('.').reduce((o, p) => (o == null ? o : o[p]), c);
 const valid = (v) => typeof v === 'number' && isFinite(v);
@@ -42,13 +49,14 @@ function delta(m, now, base) {
 // ---------------- router ----------------
 function route() {
   const h = location.hash;
-  const view = h.startsWith('#/check') ? 'check' : h.startsWith('#/history') ? 'history' : h.startsWith('#/report') ? 'report' : 'home';
+  const view = h.startsWith('#/check') ? 'check' : h.startsWith('#/history') ? 'history' : h.startsWith('#/report') ? 'report' : h.startsWith('#/research') ? 'research' : 'home';
   document.querySelectorAll('[data-view]').forEach((v) => (v.hidden = v.dataset.view !== view));
   if (view === 'check') startCheck();
   if (view === 'history') renderHistory();
   if (view === 'report') renderReport();
+  if (view === 'research') loadResearch().then((d) => { $('#researchMain').innerHTML = researchPage(d); });
   if (view !== 'home') scrollTo(0, 0);
-  document.title = { check: 'Check · Kinora', history: 'My checks · Kinora', report: 'Report · Kinora' }[view] || "Kinora · A 90-second Parkinson's check on any phone";
+  document.title = { check: 'Check · Kinora', history: 'My checks · Kinora', report: 'Report · Kinora', research: 'Research · Kinora' }[view] || "Kinora · A 90-second Parkinson's check on any phone";
 }
 
 // ---------------- the check ----------------
@@ -56,7 +64,7 @@ const isPhone = () => matchMedia('(pointer: coarse)').matches;
 let flow = null;
 function startCheck() {
   flow = { i: 0, rec: { id: Date.now().toString(36), ts: Date.now() } };
-  const steps = [{ id: 'setup' }, { id: 'tapR', hand: 'right' }, { id: 'tapL', hand: 'left' }, { id: 'spiral' }, { id: 'tremor' }, { id: 'voice' }, { id: 'done' }];
+  const steps = [{ id: 'setup' }, { id: 'tapR', hand: 'right' }, { id: 'tapL', hand: 'left' }, { id: 'spiral' }, { id: 'tremor' }, { id: 'voice' }, { id: 'typing' }, { id: 'done' }];
   flow.steps = steps; next(0);
 }
 function progress() {
@@ -64,7 +72,7 @@ function progress() {
   $('#steps').innerHTML = Array.from({ length: n }, (_, j) => `<i class="${j < k ? 'done' : j === k && flow.i > 0 && flow.i <= n ? 'now' : ''}"></i>`).join('');
   $('#stepN').textContent = flow.i === 0 ? 'Setup' : flow.i > n ? 'Done' : `${flow.i} of ${n}`;
 }
-function next(i) { flow.i = i; progress(); const s = flow.steps[i]; ({ setup, tapR: tapStep, tapL: tapStep, spiral: spiralStep, tremor: tremorStep, voice: voiceStep, done })[s.id](s); }
+function next(i) { flow.i = i; progress(); const s = flow.steps[i]; ({ setup, tapR: tapStep, tapL: tapStep, spiral: spiralStep, tremor: tremorStep, voice: voiceStep, typing: typingStep, done })[s.id](s); }
 const F = () => $('#flow');
 function setup() {
   F().innerHTML = `<p class="eyebrow">Before you start</p><h2>Two quick questions.</h2><p class="sub">They let Kinora line up today's results with your medication.</p>
@@ -110,6 +118,22 @@ function voiceStep() {
     flow.rec.voice = m; next(flow.i + 1);
   });
 }
+function typingStep() {
+  if (!Typing.supported()) {
+    F().innerHTML = `<div class="test-intro"><p class="kicker">TEST ${flow.i} · TYPING</p><h2>Typing works on a laptop.</h2><p class="sub">This test measures how long you hold each key down, which needs a physical keyboard. Run Kinora on a laptop or desktop now and then to add it.</p></div><div class="flow-actions"><button class="btn primary" data-next>Finish check</button></div>`;
+    $('[data-next]', F()).addEventListener('click', () => next(flow.i + 1)); return;
+  }
+  intro(`TEST ${flow.i} · TYPING`, 'Type for one minute.', 'Copy a short passage at your normal pace. In a study of 85 people, how long keys were held down was one of the clearest signs of early Parkinson\'s.', async () => {
+    const m = await Typing.run(stage(), { seconds: 60 }); if (!m) toast('Not enough keystrokes were recorded, so typing was skipped.');
+    flow.rec.typing = m; next(flow.i + 1);
+  }, 'Skip');
+}
+function compareBlock(rec) {
+  const items = METRICS.map((m) => { const v = get(rec, m.key), ref = refFor(m.key); if (!valid(v) || !ref) return '';
+    return `<figure class="cmp"><figcaption><b>${m.label}</b> <span class="mono">${(v * ref.scale).toFixed(/ms|taps/.test(ref.unit) ? 0 : ref.unit === 'dB' ? 1 : 2)} ${ref.unit}</span></figcaption>${dotPlot(ref.f, { you: v * ref.scale, label: m.label })}<p class="fine">Research: ${ref.f.name.toLowerCase()}, ${ref.device}.</p></figure>`; }).join('');
+  if (!items) return '';
+  return `<details class="compare-box"><summary>How your results sit among research participants</summary><p class="fine">Each dot is a real person from a published Parkinson's study. This is context, not a diagnosis: equipment and settings differ, and the two groups overlap. Your own trend over time matters more. <a href="#/research">About the data</a></p>${items}</details>`;
+}
 function done() {
   const all = load(); all.push(flow.rec); const ok = save(all);
   const prior = all.filter((c) => !c.sample);
@@ -117,7 +141,9 @@ function done() {
     return `<div class="metric"><div class="k">${m.label}</div><div class="v">${m.f(v)} <small class="muted" style="font-size:12px">${m.unit}</small></div><div class="d ${d.cls}">${d.text}</div></div>`; }).join('');
   F().innerHTML = `<p class="eyebrow">Check complete</p><h2>Nice work.</h2><p class="sub">${ok ? 'Saved on this device.' : 'Your browser blocked saving, so this result will disappear when you close the page.'} Each result is compared with your first three checks, your personal baseline.</p>
     <div class="metric-grid">${rows || '<p class="skipped">No tests were completed.</p>'}</div>
+    <div id="cmpSlot"></div>
     <div class="flow-actions"><a class="btn ghost" href="#/history">See trends</a><a class="btn primary" href="#/">Finish</a></div>`;
+  const rec = flow.rec; loadResearch().then(() => { const el = $('#cmpSlot'); if (el) el.outerHTML = compareBlock(rec); }).catch(() => {});
 }
 
 // ---------------- charts ----------------
@@ -164,7 +190,8 @@ function chartCards(checks) {
   return `<div class="charts">
     ${card('Tapping speed', [{ pts: by('tapR.rate') }, { pts: by('tapL.rate'), cls: 'l2' }], last('tapR.rate') != null ? `${fmt.rate(last('tapR.rate'))} / ${valid(last('tapL.rate')) ? fmt.rate(last('tapL.rate')) : '—'}` : null, 'taps/s, right / left', (v) => v.toFixed(1), lr)}
     ${card('Tapping rhythm variability', [{ pts: by('tapR.rhythmCV') }, { pts: by('tapL.rhythmCV'), cls: 'l2' }], valid(last('tapR.rhythmCV')) ? fmt.pct(last('tapR.rhythmCV')) : null, 'right hand, lower is steadier', (v) => (v * 100).toFixed(0) + '%', lr)}
-    ${card('Spiral tremor', [{ pts: by('spiral.tremorPx') }], valid(last('spiral.tremorPx')) ? fmt.px(last('spiral.tremorPx')) : null, 'px of 3.5–8 Hz wobble', (v) => v.toFixed(1))}
+    ${card('Spiral tremor', [{ pts: by('spiral.tremorPct') }], valid(last('spiral.tremorPct')) ? last('spiral.tremorPct').toFixed(2) + '%' : null, 'of spiral radius, fast wobble', (v) => v.toFixed(2))}
+    ${by('typing.longShare').length ? card('Typing: slow key presses', [{ pts: by('typing.longShare') }], last('typing.longShare').toFixed(1) + '%', 'of keys held over 200 ms', (v) => v.toFixed(0) + '%') : ''}
     ${card('Rest tremor', [{ pts: by('tremor.tremorRms') }], valid(last('tremor.tremorRms')) ? fmt.ms2(last('tremor.tremorRms')) : null, 'm/s²', (v) => v.toFixed(2))}
     ${card('Voice pitch variability', [{ pts: by('voice.pitchCV') }], valid(last('voice.pitchCV')) ? fmt.pct(last('voice.pitchCV')) : null, 'lower is steadier', (v) => (v * 100).toFixed(1) + '%')}
     ${(() => { const d = doseChart(checks); return d ? `<div class="chart-card"><h3>Tapping speed by dose timing</h3><p class="now">${checks.filter((c) => c.dose && c.dose !== 'none').length} <small>checks with a dose time</small></p>${d}</div>` : ''; })()}
@@ -184,7 +211,7 @@ function renderHistory() {
     <div class="hist-actions"><a class="btn primary sm" href="#/check">New check</a><a class="btn ghost sm" href="#/report">Report for my neurologist</a><button class="btn ghost sm" data-export>Download data (CSV)</button></div>
     ${chartCards(all)}
     <div class="list"><table><thead><tr><th>Date</th><th>Tapping R / L</th><th>Spiral tremor</th><th>Last dose</th><th></th></tr></thead><tbody>
-    ${[...all].reverse().slice(0, 40).map((c) => `<tr><td>${new Date(c.ts).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</td><td class="m">${valid(get(c, 'tapR.rate')) ? fmt.rate(c.tapR.rate) : '—'} / ${valid(get(c, 'tapL.rate')) ? fmt.rate(c.tapL.rate) : '—'}</td><td class="m">${valid(get(c, 'spiral.tremorPx')) ? fmt.px(c.spiral.tremorPx) + ' px' : '—'}</td><td>${DOSE.find((d) => d[0] === c.dose)?.[1] ?? '—'}</td><td><button data-del="${c.id}" aria-label="Delete check">✕</button></td></tr>`).join('')}
+    ${[...all].reverse().slice(0, 40).map((c) => `<tr><td>${new Date(c.ts).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</td><td class="m">${valid(get(c, 'tapR.rate')) ? fmt.rate(c.tapR.rate) : '—'} / ${valid(get(c, 'tapL.rate')) ? fmt.rate(c.tapL.rate) : '—'}</td><td class="m">${valid(get(c, 'spiral.tremorPct')) ? c.spiral.tremorPct.toFixed(2) + '%' : '—'}</td><td>${DOSE.find((d) => d[0] === c.dose)?.[1] ?? '—'}</td><td><button data-del="${c.id}" aria-label="Delete check">✕</button></td></tr>`).join('')}
     </tbody></table></div>`;
   main.onclick = (e) => {
     if (e.target.dataset.del) { save(load().filter((c) => c.id !== e.target.dataset.del)); renderHistory(); }
@@ -227,9 +254,9 @@ function sampleChecks() {
     out.push({ id: 's' + d + hour, ts, sample: true, dose, side: 'right',
       tapR: { rate: 3.9 + 1.0 * on + drift + 0.25 * n(), rhythmCV: 0.16 - 0.07 * on + 0.02 * n(), decrement: 0.18 - 0.1 * on },
       tapL: { rate: 4.8 + 0.6 * on + drift + 0.25 * n(), rhythmCV: 0.1 - 0.03 * on + 0.015 * n() },
-      spiral: { tremorPx: 2.6 - 1.4 * on + 0.35 * n(), errorPct: 6 - 2 * on + 0.8 * n(), hand: 'right' },
+      spiral: { tremorPct: 1.9 - 0.9 * on + 0.25 * n(), errorPct: 6 - 2 * on + 0.8 * n(), hand: 'right' },
       tremor: { tremorRms: 0.16 - 0.1 * on + 0.03 * n(), peakHz: 4.8 + 0.4 * n() },
-      voice: { pitchCV: 0.028 - 0.008 * on + 0.004 * n(), hnr: 14 + 3 * on + n() } });
+      voice: { pitchCV: 0.028 - 0.008 * on + 0.004 * n(), hnr: 19 + 3 * on + n(), jitter: 0.62 - 0.12 * on + 0.06 * n(), shimmer: 3.2 - 0.7 * on + 0.3 * n() } });
   }
   return out;
 }
@@ -256,7 +283,15 @@ function heroDemo() {
   }));
   setInterval(draw, 500);
 }
+function evidenceFromData(d) {
+  const f = (g, n) => d[g].features.find((x) => x.name === n);
+  const map = { afTap: f('tapping', 'Alternating finger tapping (afTap)').auc, typing: d.typing.model.auc, shimmer: f('voice', 'Shimmer (cycle-to-cycle loudness change)').auc, spiral: f('spiral', 'Spiral tremor (fast radial wobble)').auc };
+  document.querySelectorAll('#evnums [data-k]').forEach((el) => { el.textContent = map[el.dataset.k].toFixed(2); });
+  const t = f('tapping', 'Alternating finger tapping (afTap)');
+  $('#evfig').innerHTML = `<figcaption><b>Real people, real tapping.</b> Alternating finger taps in 30 seconds, measured by clinicians in Madrid movement-disorder units (neuroQWERTY). Each dot is one person; lines mark the medians.</figcaption>${dotPlot(t, { w: 760, h: 140 })}`;
+}
 function landingExtras() {
+  loadResearch().then(evidenceFromData).catch(() => {});
   const svg = doseChart(sampleChecks()); if (svg) $('#doseFig').outerHTML = svg.replace('<svg ', '<svg id="doseFig" ');
   $('#sampleBtn').addEventListener('click', () => {
     if (!load().length) { save(sampleChecks()); toast('Showing simulated sample data. It is clearly marked and you can remove it from My checks.'); }
@@ -267,4 +302,4 @@ function landingExtras() {
 }
 
 addEventListener('hashchange', route);
-heroDemo(); landingExtras(); route();
+heroDemo(); landingExtras(); loadResearch().catch(() => {}); route();
