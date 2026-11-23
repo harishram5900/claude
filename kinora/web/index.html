@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kinora · A 90-second Parkinson's check on any phone</title>
+<meta name="description" content="Kinora measures finger tapping, spiral drawing, rest tremor and voice in 90 seconds on any phone, with no app or watch, and turns the results into a report your neurologist can use.">
+<meta name="theme-color" content="#f5f3ee">
+<link rel="icon" href="assets/mark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- ============ LANDING ============ -->
+<div data-view="home">
+<header class="nav">
+  <a class="logo" href="#/" aria-label="Kinora home"><img src="assets/mark.svg" alt="" width="26" height="26"><span>Kinora</span></a>
+  <nav aria-label="Main"><a href="#how">How it works</a><a href="#evidence">Evidence</a><a href="#clinics">For clinics</a><a href="#/history">My checks</a></nav>
+  <a class="btn primary sm" href="#/check">Start a check</a>
+</header>
+
+<main id="main">
+<section class="hero">
+  <div class="hero-copy">
+    <p class="eyebrow">For people living with Parkinson's, and the clinics that care for them</p>
+    <h1>Ninety seconds.<br>Any phone.<br><em>A clearer picture between visits.</em></h1>
+    <p class="lede">Parkinson's changes hour to hour, but most people see a neurologist for fifteen minutes a few times a year. Kinora measures tapping speed, tremor, drawing and voice in a quick check on any phone, with no app or watch, and turns it into a report a neurologist can act on.</p>
+    <div class="cta"><a class="btn primary" href="#/check">Start a 90-second check</a><button class="btn ghost" id="sampleBtn" type="button">See a sample report</button></div>
+    <p class="fine">Free for patients. Results stay on your device unless you choose to share them.</p>
+  </div>
+  <div class="hero-demo" aria-label="Try the tapping test">
+    <div class="device">
+      <div class="device-top mono"><span>Finger tapping</span><span id="demoRate">— taps/s</span></div>
+      <p class="device-hint" id="demoHint">Try it: tap the two circles, one after the other, as fast as you can.</p>
+      <div class="device-pads"><button class="pad" data-pad="0" aria-label="Left circle"></button><button class="pad" data-pad="1" aria-label="Right circle"></button></div>
+      <svg class="device-trace" id="demoTrace" viewBox="0 0 300 70" preserveAspectRatio="none" aria-hidden="true"></svg>
+      <div class="device-foot mono"><span id="demoTaps">0 taps</span><span id="demoRhythm">rhythm —</span></div>
+    </div>
+    <div class="qr" id="qrBox" hidden><div id="qr"></div><p>Scan to run the full check on your phone</p></div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="stat"><b>~1 million</b><span>Americans live with Parkinson's disease<cite>Marras et al., npj Parkinson's Disease, 2018</cite></span></div>
+  <div class="stat"><b>40%</b><span>of Medicare beneficiaries with Parkinson's did not see a neurologist in a year<cite>npj Parkinson's Disease, 2023 (n = 274,046)</cite></span></div>
+  <div class="stat"><b>9.1%</b><span>saw a movement-disorder specialist. Rural patients and people of color had the least access<cite>same study</cite></span></div>
+  <div class="stat"><b>~40%</b><span>develop "wearing-off" motor fluctuations after 4–6 years of levodopa<cite>Ahlskog &amp; Muenter, Movement Disorders, 2001</cite></span></div>
+</section>
+
+<section class="sec" id="how">
+  <div class="sec-head"><p class="eyebrow">How it works</p><h2>Four clinical tests, rebuilt for the phone in your pocket.</h2><p>Each one is based on a test neurologists already use in the clinic. Kinora times every touch, every point of your drawing and every vibration of the phone, then compares you with your own baseline.</p></div>
+  <ol class="tests">
+    <li><div class="tfig" aria-hidden="true"><svg viewBox="0 0 120 80"><circle cx="34" cy="40" r="18" class="f1"/><circle cx="86" cy="40" r="18" class="f1"/><path d="M34 40 Q60 10 86 40" class="f2"/></svg></div>
+      <h3><span class="mono">01</span> Finger tapping</h3><p>Alternate between two targets for 10 seconds per hand. Adapted from the MDS-UPDRS finger-tapping item.</p><dl><dt>Measures</dt><dd>Taps per second, rhythm variability, slowing over the 10 s, accuracy</dd></dl></li>
+    <li><div class="tfig" aria-hidden="true"><svg viewBox="0 0 120 80"><path d="M60 40 m0 0 a3 3 0 1 1 6 0 a9 9 0 1 1 -18 0 a15 15 0 1 1 30 0 a21 21 0 1 1 -42 0 a27 27 0 1 1 54 0" class="f2"/></svg></div>
+      <h3><span class="mono">02</span> Spiral drawing</h3><p>Trace an Archimedean spiral from the centre out, the standard bedside tremor test.</p><dl><dt>Measures</dt><dd>Distance from the guide, tremor size and frequency (3.5–8 Hz), drawing speed</dd></dl></li>
+    <li><div class="tfig" aria-hidden="true"><svg viewBox="0 0 120 80"><path d="M10 40 L22 40 L26 28 L32 52 L38 26 L44 54 L50 30 L56 50 L62 34 L68 46 L74 38 L80 42 L110 40" class="f2"/></svg></div>
+      <h3><span class="mono">03</span> Rest tremor</h3><p>Rest the hand holding your phone on your lap for 10 seconds. The accelerometer records every tiny movement.</p><dl><dt>Measures</dt><dd>Tremor size (m/s²), peak frequency, share in the 3.5–7.5 Hz rest-tremor band</dd></dl></li>
+    <li><div class="tfig" aria-hidden="true"><svg viewBox="0 0 120 80"><path d="M10 40 C18 20 26 60 34 40 S50 20 58 40 S74 60 82 40 S98 20 110 40" class="f2"/></svg></div>
+      <h3><span class="mono">04</span> Sustained voice</h3><p>Say "aaah" for 5 seconds. Parkinson's often makes the voice softer and less steady.</p><dl><dt>Measures</dt><dd>Pitch steadiness, loudness steadiness, voice clarity (harmonics-to-noise ratio)</dd></dl></li>
+  </ol>
+  <div class="dose">
+    <div><p class="eyebrow">The part a clinic visit can't see</p><h3>Every check is tagged with time since your last dose.</h3><p>Over a few weeks, Kinora shows how your tapping speed rises after levodopa and fades before the next dose: the "wearing-off" pattern neurologists adjust medication for, drawn from your own data instead of memory.</p></div>
+    <figure><svg id="doseFig" viewBox="0 0 420 220" role="img" aria-label="Example: tapping speed by hours since last dose"></svg><figcaption>Example from simulated data: tapping speed by hours since the last dose.</figcaption></figure>
+  </div>
+</section>
+
+<section class="sec alt" id="evidence">
+  <div class="sec-head"><p class="eyebrow">Evidence</p><h2>Built on published research, tested line by line.</h2></div>
+  <div class="ev">
+    <article><h3>Smartphone tapping tracks motor severity</h3><p>A tapping app's results correlated with motor UPDRS and bradykinesia scores in 57 people with Parkinson's and 87 controls (Kim et al., PLoS ONE, 2016). A second study found significant correlations with MDS-UPDRS Part III (r = 0.28–0.61) and good repeatability (Lee et al., Journal of Parkinson's Disease, 2016).</p></article>
+    <article><h3>Voice carries a motor signal</h3><p>Measures of a sustained vowel separated people with Parkinson's from controls and suited remote monitoring (Little et al., IEEE Transactions on Biomedical Engineering, 2009).</p></article>
+    <article><h3>The spiral is the bedside standard</h3><p>Archimedean spiral drawing has been used to rate tremor severity for decades (Bain &amp; Findley, Journal of Neurology, Neurosurgery &amp; Psychiatry, 1993). Kinora measures the same drawing to the pixel and the millisecond.</p></article>
+    <article class="tests-card"><h3>Our signal checks</h3><ul class="checks mono">
+      <li>5 Hz tremor in a spiral → found at 5 Hz</li><li>Clean spiral → error under 1%, no tremor</li><li>5 Hz phone shake → peak at 5 Hz</li><li>Still phone → near-zero tremor</li><li>Steady 140 Hz vowel → 140 Hz, HNR &gt; 15 dB</li><li>Wobbling vowel → over 3× pitch instability</li><li>Slowing taps → decrement detected</li><li>Steady 5 taps/s → 5 taps/s (±0.3)</li></ul>
+      <p class="fine">12 automated tests on known signals, run on every change.</p></article>
+  </div>
+  <p class="disclaimer">Kinora is a tracking tool. It does not diagnose Parkinson's disease or any condition and is not a substitute for a clinician. It has not been reviewed by the FDA.</p>
+</section>
+
+<section class="sec" id="clinics">
+  <div class="sec-head"><p class="eyebrow">For clinics</p><h2>Free for patients. Paid by the clinics that use the data.</h2><p>A clinic texts a link. The patient checks in at home, before and after doses, in 90 seconds. The neurologist opens one page before the visit.</p></div>
+  <div class="plans">
+    <div class="plan"><h3>Patient</h3><p class="price">Free</p><ul><li>Unlimited checks on any phone</li><li>Trends and dose-timing view</li><li>Printable report for your neurologist</li></ul></div>
+    <div class="plan feat"><h3>Clinic</h3><p class="price">$10<small> per active patient / month</small></p><ul><li>Patients enrolled by text link, no app</li><li>Pre-visit summary for every patient</li><li>Alerts when a patient's tapping drops 20% from baseline</li><li>Works for telehealth and rural outreach</li></ul></div>
+    <div class="plan"><h3>Research</h3><p class="price">Per study</p><ul><li>Remote motor measures for clinical trials</li><li>Raw signal export</li><li>Study-specific schedules</li></ul></div>
+  </div>
+  <div class="table-wrap"><table class="compare">
+    <thead><tr><th></th><th>Kinora</th><th>Rune Labs StrivePD</th><th>Kneu Health</th><th>Paper diary</th></tr></thead>
+    <tbody>
+      <tr><td>Hardware needed</td><td>Any phone</td><td>Apple Watch + iPhone</td><td>Smartphone app</td><td>None</td></tr>
+      <tr><td>Install</td><td>None, opens from a link</td><td>App + watch setup</td><td>App download</td><td>None</td></tr>
+      <tr><td>Objective motor measures</td><td>Tapping, spiral, tremor, voice</td><td>Tremor, dyskinesia (passive)</td><td>Movement, speech, cognition</td><td>No</td></tr>
+      <tr><td>Dose-timing view</td><td>Built in</td><td>Medication logging</td><td>—</td><td>Self-reported</td></tr>
+      <tr><td>Status</td><td>Prototype</td><td>FDA-cleared, $57M raised</td><td>$5.6M raised</td><td>Standard of care</td></tr>
+    </tbody></table></div>
+  <p class="fine">Competitor details from public reporting (STAT, 2024–2025). The funding behind Rune Labs and Kneu Health shows clinics and investors pay for this; Kinora's wedge is the patient with an Android phone, no smartwatch and no specialist nearby.</p>
+  <div class="road">
+    <div><span class="mono">Now</span><p>Working prototype. Four tests, dose tagging, clinician report.</p></div>
+    <div><span class="mono">Next 6 months</span><p>Interviews with movement-disorder clinics and Parkinson's support groups; 20-patient feasibility pilot.</p></div>
+    <div><span class="mono">Year 1</span><p>IRB-approved study comparing Kinora with in-clinic MDS-UPDRS Part III ratings.</p></div>
+    <div><span class="mono">Year 2</span><p>FDA 510(k) submission as Class II software, the path Rune Labs took.</p></div>
+  </div>
+</section>
+</main>
+<footer class="foot"><span>Kinora · a student venture</span><span>Not a medical device. Does not diagnose. Not affiliated with any company named above.</span></footer>
+</div>
+
+<!-- ============ CHECK FLOW ============ -->
+<div data-view="check" hidden>
+  <header class="flowbar"><a class="x" href="#/" aria-label="Exit check">✕</a><div class="steps" id="steps"></div><span class="mono step-n" id="stepN"></span></header>
+  <div class="flow" id="flow" aria-live="polite"></div>
+</div>
+
+<!-- ============ HISTORY / REPORT ============ -->
+<div data-view="history" hidden>
+  <header class="nav"><a class="logo" href="#/"><img src="assets/mark.svg" alt="" width="26" height="26"><span>Kinora</span></a><nav><a href="#/history" aria-current="page">My checks</a><a href="#/report">Report</a></nav><a class="btn primary sm" href="#/check">New check</a></header>
+  <main class="wrap" id="historyMain"></main>
+</div>
+<div data-view="report" hidden>
+  <div class="report-bar noprint"><a class="btn ghost sm" href="#/history">← Back</a><button class="btn primary sm" type="button" onclick="print()">Print or save as PDF</button></div>
+  <main class="report" id="reportMain"></main>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

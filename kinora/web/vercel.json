@@ -1,0 +1,1 @@
+{"buildCommand":"","outputDirectory":".","framework":null,"headers":[{"source":"/(.*)","headers":[{"key":"Permissions-Policy","value":"microphone=(self), accelerometer=(self)"}]}]}
