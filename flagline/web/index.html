@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flagline · Heat-safe practice planning for every high school</title>
+<meta name="description" content="Pick any US high school. Flagline turns the National Weather Service heat forecast into hour-by-hour practice flags, a preseason plan and the heat log your state requires. No hardware.">
+<meta name="theme-color" content="#f4f2ec">
+<link rel="icon" href="assets/flag.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="#"><img src="assets/flag.svg" alt="" width="20" height="20"><span>Flagline</span></a>
+  <nav aria-label="Sections"><a href="#plan">Planner</a><a href="#log">Heat log</a><a href="#preseason">Preseason</a><a href="#history">Your summers</a><a href="#why">Why</a><a href="#schools">For schools</a></nav>
+</header>
+
+<section class="hero">
+  <div class="hero-l">
+    <p class="kicker">Exertional heat stroke is a leading cause of death in high school sports. It is preventable.</p>
+    <h1>Know the heat flag<br>before practice starts.</h1>
+    <p class="lede">Pick your school. Flagline turns the National Weather Service's official heat forecast into hour-by-hour practice flags, your preseason plan, and the heat log your state requires. No sensor to buy.</p>
+    <div class="search" role="search">
+      <label for="q" class="sr">Find your high school</label>
+      <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="Search 17,558 US public high schools…" aria-autocomplete="list" aria-controls="results">
+      <ul id="results" role="listbox" hidden></ul>
+    </div>
+    <p class="fine">Try <button class="linkbtn" data-try="Miami Senior High">Miami Senior High</button>, <button class="linkbtn" data-try="Lane Technical">Lane Tech (Chicago)</button> or <button class="linkbtn" data-try="Allen High School">Allen High (TX)</button>.</p>
+  </div>
+  <aside class="hero-r">
+    <div class="board" id="board" aria-live="polite">
+      <div class="board-h"><span class="mono">TODAY · HOURLY HEAT FLAGS</span><span class="mono" id="boardSrc">NWS</span></div>
+      <div class="board-name" id="boardName">Loading the National Weather Service forecast…</div>
+      <div class="board-strip" id="boardStrip"></div>
+      <div class="board-axis mono" id="boardAxis"></div>
+      <div class="board-now" id="boardNow"></div>
+    </div>
+    <ol class="legend">
+      <li class="f0"><b>Green</b> normal</li><li class="f1"><b>Yellow</b> extra breaks</li><li class="f2"><b>Orange</b> max 2 h</li><li class="f3"><b>Red</b> max 1 h, AT present</li><li class="f4"><b>Black</b> no outdoor activity</li>
+    </ol>
+  </aside>
+</section>
+
+<main>
+<section id="plan" class="sec" hidden>
+  <div class="sec-h"><span class="num mono">01</span><div><h2 id="schoolName">—</h2><p id="schoolMeta" class="meta mono">—</p></div></div>
+  <div class="setup">
+    <label>Practice starts <input type="time" id="pStart" value="15:30"></label>
+    <label>Length <select id="pLen"><option value="60">1 h</option><option value="90">1.5 h</option><option value="120" selected>2 h</option><option value="150">2.5 h</option><option value="180">3 h</option></select></label>
+    <label>Sport <select id="pSport"><option value="pads">Football (pads)</option><option value="other">Other outdoor sport</option><option value="band">Marching band</option></select></label>
+    <label>Heat category <select id="pCat"><option value="1">Category 1 (cooler)</option><option value="2">Category 2</option><option value="3">Category 3 (hottest)</option></select></label>
+    <button class="btn" id="icsBtn" type="button">Add week to calendar</button>
+  </div>
+  <p class="fine" id="catNote"></p>
+  <div class="grid-wrap">
+    <div class="hgrid" id="hgrid" role="grid" aria-label="Seven-day hourly heat flags"></div>
+  </div>
+  <div class="days" id="days"></div>
+  <div class="detail" id="detail"></div>
+  <p class="fine" id="srcNote"></p>
+</section>
+
+<section id="log" class="sec" hidden>
+  <div class="sec-h"><span class="num mono">02</span><div><h2>Heat log</h2><p>Most state policies require a WBGT reading on the field before and during practice, written down. Enter the reading from your instrument; Flagline applies the right flag and keeps the record.</p></div></div>
+  <form class="logform" id="logForm">
+    <label>Time <input type="datetime-local" id="lTime" required></label>
+    <label>WBGT reading (°F) <input type="number" id="lVal" step="0.1" min="40" max="110" required inputmode="decimal"></label>
+    <label>Venue <input type="text" id="lVenue" placeholder="Main field" maxlength="40"></label>
+    <label>Initials <input type="text" id="lBy" maxlength="5" placeholder="JS"></label>
+    <button class="btn primary" type="submit">Record reading</button>
+  </form>
+  <table class="logtable" id="logTable"><thead><tr><th>Time</th><th>Venue</th><th>WBGT</th><th>Flag</th><th>Required</th><th>By</th><th></th></tr></thead><tbody></tbody></table>
+  <div class="row"><button class="btn" id="csvBtn" type="button">Export CSV</button><button class="btn" id="printBtn" type="button">Print log sheet</button><span class="fine">Stored on this device only.</span></div>
+</section>
+
+<section id="preseason" class="sec" hidden>
+  <div class="sec-h"><span class="num mono">03</span><div><h2>Preseason acclimatization</h2><p>Most heat-stroke deaths happen in the first days of practice, before bodies adapt. The NATA 14-day plan phases in gear and practice time; Flagline adds the forecast flag for days within the next week.</p></div></div>
+  <div class="setup"><label>First day of practice <input type="date" id="aStart"></label></div>
+  <div class="acc" id="acc"></div>
+</section>
+
+<section id="history" class="sec" hidden>
+  <div class="sec-h"><span class="num mono">04</span><div><h2>Your last three summers</h2><p>Every hour of June–August at this school, rebuilt from historical weather. It shows when the dangerous hours actually happen here.</p></div></div>
+  <div class="hist-stats" id="histStats"><p class="fine">Loading historical weather…</p></div>
+  <div class="hist-wrap"><canvas id="histCanvas" aria-label="Heat flags by hour of day and date, last three summers"></canvas></div>
+  <p class="fine">Rows are hours of the day (5 am at top to 10 pm at bottom), columns are days from June 1 to August 31. WBGT computed with Flagline's engine from historical hourly weather.</p>
+</section>
+
+<section id="why" class="sec">
+  <div class="sec-h"><span class="num mono">05</span><div><h2>Why this matters</h2></div></div>
+  <div class="facts">
+    <div><b class="mono">67</b><span>high school athletes died of exertional heat stroke from 1982 to 2022 (NCCSIR records, Sports Health 2024)</span></div>
+    <div><b class="mono">2.4 / yr</b><span>football heat-stroke deaths in 2017–2021, up from 1.4 a year in 2012–2016 (NCCSIR via NFHS)</span></div>
+    <div><b class="mono">$213–$3,700</b><span>price of the WBGT instruments state policies require (Delaware DIAA 2025 list)</span></div>
+    <div><b class="mono">0.2%</b><span>of dangerous red/black hours fall between 6 and 9 am; 67% fall between noon and 6 pm (our analysis, 30 cities)</span></div>
+  </div>
+  <div class="two">
+    <figure class="panel"><figcaption><b>When dangerous heat happens</b> Red- and black-flag hours by hour of day (local solar time; add about an hour for daylight saving time), 30 US cities, July 15–August 31, 2021–2025, NASA POWER hourly data.</figcaption><canvas id="natChart" class="chart"></canvas></figure>
+    <div class="panel prose">
+      <h3>The gap Flagline fills</h3>
+      <p>The National Weather Service already forecasts wet-bulb globe temperature (WBGT), the heat measure sports medicine uses. But a forecast grid is not a practice plan. Coaches still have to look it up, convert it to their state's flag table, decide what that means for pads, breaks and practice length, and keep a written log.</p>
+      <p>Flagline does that for every public high school in the country, using the NWS forecast where it is issued and our own engine where it is not.</p>
+      <h3>How we checked the numbers</h3>
+      <p>Our WBGT engine reproduces the NWS official WBGT forecast to within <b>0.7°F on average across 1,464 forecast hours in 8 cities</b>, with almost no bias (−0.25°F). Flag thresholds follow the Korey Stringer Institute regional guidelines; the Category 2 table matches the Delaware DIAA 2025 policy exactly.</p>
+    </div>
+  </div>
+</section>
+
+<section id="schools" class="sec">
+  <div class="sec-h"><span class="num mono">06</span><div><h2>For athletic directors and trainers</h2><p>Flagline is free for every coach. Schools and districts pay for the parts that keep a whole program compliant.</p></div></div>
+  <div class="plans">
+    <div class="plan"><h3>Coach</h3><p class="price mono">Free</p><ul><li>7-day hourly flags for your school</li><li>Practice-window planner and calendar export</li><li>Preseason plan</li><li>Heat log on your phone</li></ul></div>
+    <div class="plan hl"><h3>School</h3><p class="price mono">$199<small>/year</small></p><ul><li>Every team and venue in one place</li><li>Text alerts when a practice slot turns orange or worse</li><li>Shared, signed heat log for the AD and athletic trainer</li><li>Season record export for audits and insurance</li></ul></div>
+    <div class="plan"><h3>District</h3><p class="price mono">$1,500<small>/year</small></p><ul><li>Up to 10 schools</li><li>District dashboard and policy settings</li><li>Bluetooth WBGT meter import</li><li>Training for coaches</li></ul></div>
+  </div>
+  <table class="compare">
+    <thead><tr><th></th><th>Flagline</th><th>Handheld WBGT meter</th><th>On-site weather station + software</th></tr></thead>
+    <tbody>
+      <tr><td>Up-front cost</td><td>$0</td><td>$213–$3,700 per meter</td><td>Station hardware plus subscription (quote-based)</td></tr>
+      <tr><td>Plan practice days ahead</td><td>Yes, 7-day hourly</td><td>No, reads current conditions</td><td>Partly</td></tr>
+      <tr><td>Applies your state's flag table</td><td>Yes</td><td>No</td><td>Yes</td></tr>
+      <tr><td>Required on-field reading</td><td>Logs it (pair with any meter)</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td>Preseason acclimatization plan</td><td>Yes</td><td>No</td><td>Varies</td></tr>
+    </tbody>
+  </table>
+  <div class="two">
+    <div class="panel prose"><h3>Who buys</h3><p>About 17,500 US public high schools run outdoor sports. Heat rules are spreading: Texas's UIL requires WBGT monitoring starting in 2026, and many states already require WBGT readings and written logs. Small and rural schools without a full-time athletic trainer are the ones least able to buy hardware and most likely to need the plan.</p></div>
+    <div class="panel prose"><h3>What comes next</h3><p>Interview athletic trainers and athletic directors in Illinois and Texas this winter. Pilot with 5 schools for summer 2027 preseason. Add text alerts and the shared log for the School plan. Partner with state athletic trainer associations for distribution.</p></div>
+  </div>
+</section>
+
+<section class="sec doc">
+  <div class="sec-h"><span class="num mono">07</span><div><h2>Sources and limits</h2></div></div>
+  <div class="two prose small">
+    <div>
+      <h3>Data</h3>
+      <ul>
+        <li>National Weather Service gridpoint forecasts (api.weather.gov): official WBGT, HeatRisk, temperature, dew point, wind, sky cover.</li>
+        <li>NCES EDGE Public School Locations, 2024–25: 17,558 high schools.</li>
+        <li>NASA POWER hourly (T2M, RH2M, WS2M, all-sky solar) for the national analysis; Open-Meteo historical weather for each school's summers.</li>
+        <li>Flag thresholds: Korey Stringer Institute regional guidelines (Grundstein et al., 2015); activity rules adapted from the Delaware DIAA Weather Policy, Fall 2025.</li>
+        <li>Preseason plan: Casa et al., Preseason heat-acclimatization guidelines for secondary school athletics, J Athl Train 2009.</li>
+        <li>Deaths: Sports Health 2024 (NCCSIR 1982–2022); NFHS citing NCCSIR.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Limits</h3>
+      <ul>
+        <li>Forecasts describe a ~2.5 km grid cell, not your field. Turf, shade and wind change WBGT on the spot. Always take the required on-field reading.</li>
+        <li>Default heat categories are by state; confirm the category your state association uses.</li>
+        <li>Flagline supports, and does not replace, your athletic trainer and your state's heat policy.</li>
+      </ul>
+      <h3>Use of AI</h3>
+      <p>The team used an AI coding assistant (Claude, by Anthropic) to help write code and draft text. The team chose the problem, made the design decisions and checked every number against the cited sources.</p>
+    </div>
+  </div>
+</section>
+</main>
+<footer class="foot mono"><span>FLAGLINE · a student venture · not affiliated with the NWS, NFHS or any state association</span><span>Forecast data: National Weather Service</span></footer>
+<div class="toast" id="toast" hidden></div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
