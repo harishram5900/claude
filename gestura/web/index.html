@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gestura · Sign language, understood</title>
+<meta name="description" content="Gestura reads American Sign Language from your camera, fingerspelling and 250 common signs, speaks it aloud, transcribes videos, and teaches you to sign. Everything runs on your device.">
+<meta name="theme-color" content="#0e0f11">
+<link rel="icon" href="assets/mark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;600&family=Atkinson+Hyperlegible+Next:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="#/translate" aria-label="Gestura"><img src="assets/mark.svg" alt="" width="28" height="28"><span>Gestura</span></a>
+  <nav class="tabs" aria-label="Sections">
+    <a href="#/translate" data-tab="translate">Translate</a><a href="#/video" data-tab="video">Video</a><a href="#/learn" data-tab="learn">Learn</a><a href="#/about" data-tab="about">How it works</a>
+  </nav>
+  <span class="privacy mono" title="Camera and video never leave this device">● On-device</span>
+</header>
+
+<!-- =========================== TRANSLATE =========================== -->
+<main data-view="translate" class="translate">
+  <section class="stage">
+    <div class="cam" id="cam">
+      <video id="video" playsinline muted></video>
+      <canvas id="overlay" aria-hidden="true"></canvas>
+      <div class="cam-idle" id="camIdle">
+        <div class="idle-art" aria-hidden="true"><svg viewBox="0 0 120 120"><path d="M38 96V56a6 6 0 0 1 12 0v18V30a6 6 0 0 1 12 0v40V24a6 6 0 0 1 12 0v46V32a6 6 0 0 1 12 0v52c0 14-10 24-24 24h-6c-10 0-16-5-22-14L22 78a6 6 0 0 1 9-8l7 8" /></svg></div>
+        <p>Gestura needs your camera to see your hands.<br><span class="dim">Video is processed on this device and never uploaded.</span></p>
+        <button class="btn primary big" id="startCam" type="button">Turn on camera</button>
+      </div>
+      <div class="hud" id="hud" hidden>
+        <div class="live mono"><i></i><span id="fps">— fps</span></div>
+        <div class="mode-pill mono" id="modePill">LETTERS</div>
+      </div>
+      <div class="bubble" id="bubble" hidden><b id="bubbleText"></b><span class="ring" id="bubbleRing"></span><small id="bubbleSub"></small></div>
+      <div class="rec mono" id="recBadge" hidden>● REC <span id="recTime">0:00</span></div>
+    </div>
+    <div class="caption" id="caption" aria-live="polite"><span class="ph">Sign something and it appears here.</span></div>
+  </section>
+
+  <aside class="panel">
+    <div class="seg" role="tablist" aria-label="What to recognise">
+      <button role="tab" aria-selected="true" data-mode="letters">Fingerspelling<small>A–Z</small></button>
+      <button role="tab" aria-selected="false" data-mode="words">Signs<small>250 words</small></button>
+    </div>
+    <div class="meter" id="meter" aria-label="Top guesses"></div>
+    <p class="hint" id="modeHint">Hold each letter steady for half a second. Drop your hand to finish a word.</p>
+
+    <div class="sug" id="sug" hidden></div>
+
+    <div class="actions">
+      <button class="btn speak" id="speakBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none"/></svg>Speak</button>
+      <div class="row">
+        <button class="btn" id="spaceBtn" type="button">Space</button>
+        <button class="btn" id="delBtn" type="button" aria-label="Delete last">⌫</button>
+        <button class="btn" id="clearBtn" type="button">Clear</button>
+      </div>
+      <div class="row">
+        <button class="btn" id="recBtn" type="button"><i class="dot"></i><span>Record</span></button>
+        <button class="btn" id="copyBtn" type="button">Copy text</button>
+      </div>
+    </div>
+    <details class="settings"><summary>Voice &amp; settings</summary>
+      <label>Voice <select id="voiceSel"></select></label>
+      <label>Speed <input type="range" id="rate" min="0.6" max="1.4" step="0.1" value="1"></label>
+      <label class="chk"><input type="checkbox" id="autoSpeak"> Speak each word as it is recognised</label>
+      <label class="chk"><input type="checkbox" id="showSkel" checked> Show hand tracking</label>
+      <button class="btn small" id="calibBtn" type="button">Calibrate letters to my hand</button>
+    </details>
+    <div class="recs" id="recs"></div>
+  </aside>
+</main>
+
+<!-- =========================== VIDEO =========================== -->
+<main data-view="video" class="page" hidden>
+  <header class="page-h"><h1>Understand a video</h1><p>Drop in a clip of someone signing or speaking. Gestura reads the signs from their hands and the speech from the audio, and lines both up on a timeline.</p></header>
+  <label class="drop" id="drop"><input type="file" id="file" accept="video/*" hidden><b>Choose a video</b><span>or drag one here · MP4, MOV or WebM · stays on your device</span></label>
+  <div class="vwork" id="vwork" hidden>
+    <div class="vplayer"><video id="vid" controls playsinline></video><div class="vcap" id="vcap"></div></div>
+    <div class="vside">
+      <fieldset class="opts"><legend>Read</legend>
+        <label class="chk"><input type="checkbox" id="optWords" checked> Signs (250 words)</label>
+        <label class="chk"><input type="checkbox" id="optLetters"> Fingerspelling</label>
+        <label class="chk"><input type="checkbox" id="optSpeech" checked> Speech from the audio</label>
+      </fieldset>
+      <button class="btn primary" id="analyse" type="button">Analyse video</button>
+      <div class="progress" id="vprog" hidden><div class="bar"><i id="vbar"></i></div><span id="vstat" class="mono"></span></div>
+      <div class="vresult" id="vres"></div>
+      <button class="btn speak small" id="vspeak" type="button" hidden>Speak transcript</button>
+    </div>
+  </div>
+  <section class="timeline" id="timeline" hidden><h2>Timeline</h2><div class="tl" id="tl"></div></section>
+  <section class="lip">
+    <h2>Lip reading</h2>
+    <p>Reading speech from lips alone, with no sound, takes a large model (Auto-AVSR, about 250 million parameters) that needs a GPU server; it can't run inside a browser yet. Gestura measures mouth movement in every video to mark when someone is speaking, and can send the mouth region to a lip-reading server you connect.</p>
+    <div class="lipbox"><label>Lip-reading server <input type="url" id="lipUrl" placeholder="https://your-lipreading-server/api" spellcheck="false"></label><span class="mono dim" id="lipState">Not connected</span></div>
+  </section>
+</main>
+
+<!-- =========================== LEARN =========================== -->
+<main data-view="learn" class="page" hidden>
+  <header class="page-h"><h1>Learn to sign</h1><p>Watch the handshape, try it in front of your camera, and Gestura tells you when you've got it. Progress saves on this device.</p></header>
+  <div class="learn-tabs seg small" role="tablist"><button role="tab" aria-selected="true" data-ltab="abc">Alphabet</button><button role="tab" aria-selected="false" data-ltab="words">Words</button></div>
+  <div class="learn">
+    <div class="lgrid" id="lgrid"></div>
+    <div class="lesson" id="lesson">
+      <div class="ref">
+        <div class="ref-h"><span class="mono dim" id="refKind">LETTER</span><h2 id="refTitle">A</h2><p id="refTip"></p></div>
+        <canvas id="refCanvas" width="520" height="420" aria-label="Reference handshape"></canvas>
+        <p class="refsrc mono dim" id="refSrc"></p>
+      </div>
+      <div class="try">
+        <div class="cam small" id="lcam"><video id="lvideo" playsinline muted></video><canvas id="loverlay"></canvas>
+          <div class="cam-idle" id="lIdle"><button class="btn primary" id="lStart" type="button">Practice with camera</button></div>
+          <div class="verdict" id="lVerdict" hidden></div></div>
+        <div class="lmeter"><div class="lbar"><i id="lbar"></i></div><span id="lscore" class="mono">—</span></div>
+        <p class="hint" id="lHint">Match the shape on the left. Hold it steady.</p>
+        <div class="row"><button class="btn" id="lPrev" type="button">← Previous</button><button class="btn" id="lNext" type="button">Next →</button></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- =========================== ABOUT =========================== -->
+<main data-view="about" class="page about" hidden>
+  <header class="page-h"><h1>How Gestura works</h1><p>Every model runs in your browser. We tested each one on people it had never seen before putting it in front of you. Here is exactly how well each part works.</p></header>
+  <div class="models" id="models"></div>
+  <section class="flow">
+    <h2>From camera to voice</h2>
+    <ol>
+      <li><b>See the hand.</b> Google MediaPipe finds 21 points on each hand (and, for signs, the body and face) 30 times a second.</li>
+      <li><b>Read the letter.</b> A small neural network we trained on 8,599 real photos of the ASL alphabet turns the 21 points into a letter. Optional calibration learns your own hand in a minute.</li>
+      <li><b>Read the sign.</b> For whole words, the first-place model from Google's Isolated Sign Language Recognition competition reads the motion of both hands, arms and face across the whole sign.</li>
+      <li><b>Fix the spelling.</b> Fingerspelled words are checked against the 10,000 most common English words.</li>
+      <li><b>Speak.</b> Your device's own text-to-speech voice reads the transcript aloud.</li>
+    </ol>
+  </section>
+  <section class="limits"><h2>Limits we want you to know</h2><ul>
+    <li>ASL is a full language with its own grammar. Gestura recognises fingerspelling and 250 individual signs; it does not translate full ASL sentences yet.</li>
+    <li>J and Z involve motion; Gestura reads their final handshape.</li>
+    <li>Good light, a plain background and your whole hand in frame make a big difference.</li>
+    <li>Lip reading without audio needs a GPU server (see the Video page).</li>
+  </ul></section>
+  <section class="credits"><h2>Data and models</h2><ul>
+    <li>Hand, body and face tracking: Google MediaPipe Tasks (Apache 2.0).</li>
+    <li>Signs: 1st-place solution, Google – Isolated Sign Language Recognition (Kaggle), MIT licence; vocabulary of 250 signs from the competition.</li>
+    <li>Word accuracy test and teaching animations: ASL Citizen (Desai et al., 2023), real community signers; used for non-commercial education.</li>
+    <li>Alphabet training: ASL alphabet photos (Hugging Face, Marxulia v03); outside test: Keithsel/asl_signs.</li>
+    <li>Speech: OpenAI Whisper base.en via Transformers.js.</li>
+    <li>Word list: Google 10,000 most common English words.</li>
+  </ul></section>
+</main>
+
+<div class="calib" id="calib" hidden role="dialog" aria-modal="true" aria-labelledby="calibTitle">
+  <div class="calib-card"><h2 id="calibTitle">Teach Gestura your hand</h2><p>Show each letter and press <b>Capture</b> (or the space bar). Two or three letters you find tricky is enough; you can do all 26.</p>
+    <div class="calib-letter"><span id="calibLetter">A</span><canvas id="calibRef" width="180" height="150"></canvas></div>
+    <div class="row"><button class="btn" id="calibPrev" type="button">←</button><button class="btn primary" id="calibCap" type="button">Capture</button><button class="btn" id="calibNext" type="button">→</button></div>
+    <p class="mono dim" id="calibCount"></p>
+    <div class="row"><button class="btn" id="calibReset" type="button">Reset calibration</button><button class="btn primary" id="calibDone" type="button">Done</button></div></div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

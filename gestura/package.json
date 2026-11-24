@@ -1,0 +1,1 @@
+{"type":"module","name":"gestura","private":true,"scripts":{"test":"node tests/models.test.mjs"}}
