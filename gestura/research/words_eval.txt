@@ -1,0 +1,4 @@
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+z=0 swap=False: top-1 0.743  top-5 0.898  (n=619)
+z=1 swap=False: top-1 0.743  top-5 0.898  (n=619)
+z=0 swap=True: top-1 0.036  top-5 0.157  (n=619)
