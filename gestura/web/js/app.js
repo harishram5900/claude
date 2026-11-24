@@ -222,7 +222,7 @@ async function loop() {
 $('#sug').addEventListener('click', (e) => { const w = e.target.dataset.w; if (!w) return; addSign(w); $('#sug').hidden = true; });
 const SIGN_ACCEPT = 0.3;   // below this Gestura asks instead of guessing: it answers 98% of signs and is right 88% of the time (research/train_words2.py)
 // vocabulary list for the Signs panel
-fetch('models/signs_head.json').then((r) => r.json()).then((h) => {
+fetch(`models/signs_head.json?v=${W.MV}`).then((r) => r.json()).then((h) => {
   const draw = (q = '') => { const L = h.labels.filter((w) => w.includes(q.toLowerCase().trim())); $('#vocabList').innerHTML = L.map((w) => `<span>${w}</span>`).join('') || '<span>No match</span>'; };
   $('#vocabN').textContent = h.eval.englishWords; $('#vocabCount').textContent = `${h.eval.englishWords} words`; draw();
   $('#vocabQ').addEventListener('input', (e) => draw(e.target.value));
@@ -268,7 +268,7 @@ $('#recBtn').addEventListener('click', () => {
 
 // ---- calibration ----
 let calIdx = 0;
-function calibRender() { const M = L.lettersModel(), Lt = M.letters[calIdx]; $('#calibLetter').textContent = Lt; $('#calibRef').src = `models/abc/${Lt}.jpg`; const n = Object.values(L.calibration()).reduce((a, b) => a + b.length, 0); $('#calibCount').textContent = `${(L.calibration()[Lt] || []).length} samples of ${Lt} · ${n} in total`; }
+function calibRender() { const M = L.lettersModel(), Lt = M.letters[calIdx]; $('#calibLetter').textContent = Lt; $('#calibRef').src = `models/abc/${Lt}.jpg?v=${W.MV}`; const n = Object.values(L.calibration()).reduce((a, b) => a + b.length, 0); $('#calibCount').textContent = `${(L.calibration()[Lt] || []).length} samples of ${Lt} · ${n} in total`; }
 $('#calibBtn').addEventListener('click', () => { if (!T.stream) return toast('Turn on the camera first.'); setMode('letters'); $('#calib').hidden = false; calibRender(); });
 $('#calibPrev').addEventListener('click', () => { calIdx = (calIdx + 25) % 26; calibRender(); });
 $('#calibNext').addEventListener('click', () => { calIdx = (calIdx + 1) % 26; calibRender(); });
@@ -282,7 +282,7 @@ $('#calibDone').addEventListener('click', () => ($('#calib').hidden = true));
 const LR = { tab: 'abc', idx: 0, words: [], anim: null, raf: 0, stream: null, running: false, ema: 0, okSince: 0, seg: null, busy: false };
 const done = () => store.get('gestura.learned', {});
 async function learnInit() {
-  await L.loadLetters(); if (!LR.words.length) LR.words = await (await fetch('models/signs/_index.json')).json();
+  await L.loadLetters(); if (!LR.words.length) LR.words = await (await fetch(`models/signs/_index.json?v=${W.MV}`)).json();
   renderGrid(); select(LR.idx);
 }
 function renderGrid() {
@@ -303,14 +303,14 @@ async function select(i) {
   LR.ema = 0; LR.okSince = 0; $('#lVerdict').hidden = true; $('#lbar').style.width = '0'; $('#lscore').textContent = '—'; cancelAnimationFrame(LR.raf); LR.anim = null;
   if (LR.tab === 'abc') {
     $('#refKind').textContent = 'Letter'; $('#refTitle').textContent = x; $('#refTip').textContent = TIPS[x];
-    $('#refImg').hidden = false; $('#refCanvas').hidden = true; $('#refImg').src = `models/abc/${x}.jpg`; $('#refImg').alt = `ASL letter ${x}`;
+    $('#refImg').hidden = false; $('#refCanvas').hidden = true; $('#refImg').src = `models/abc/${x}.jpg?v=${W.MV}`; $('#refImg').alt = `ASL letter ${x}`;
     $('#refSrc').textContent = `${x === 'J' || x === 'Z' ? 'Final handshape; the letter is drawn in the air. ' : ''}Real hand, photographed from the signer's own view (EitanG98 ASL letters, public domain)`;
     $('#lHint').textContent = 'Match the shape. Hold it steady until the bar fills.';
   } else {
     $('#refImg').hidden = true; $('#refCanvas').hidden = false;
     $('#refKind').textContent = 'Sign'; $('#refTitle').textContent = x; $('#refTip').textContent = 'Watch the movement, then sign it once and lower your hands.';
     $('#refSrc').textContent = 'Real signer from ASL Citizen (Desai et al., 2023), facing you · yellow = their right hand';
-    const a = await (await fetch(`models/signs/${encodeURIComponent(x)}.json`)).json(); LR.anim = a; let k = 0, last = 0;
+    const a = await (await fetch(`models/signs/${encodeURIComponent(x)}.json?v=${W.MV}`)).json(); LR.anim = a; let k = 0, last = 0;
     const tick = (ts) => { if (LR.anim !== a) return; if (ts - last > 1000 / a.fps) { if (k < a.f.length) drawSignFrame($('#refCanvas'), a.f[k]); k = (k + 1) % (a.f.length + 10); last = ts; } LR.raf = requestAnimationFrame(tick); };   // short pause on the last frame
     LR.raf = requestAnimationFrame(tick);
     $('#lHint').textContent = 'Sign the word once, then lower your hands. Gestura checks it with the sign model.';
@@ -357,7 +357,7 @@ async function learnLoop() {
 
 // ============================== about ==============================
 async function aboutInit() {
-  const [a, sh] = await Promise.all([L.loadLetters(), fetch('models/signs_head.json').then((r) => r.json())]);
+  const [a, sh] = await Promise.all([L.loadLetters(), fetch(`models/signs_head.json?v=${W.MV}`).then((r) => r.json())]);
   const e = a.eval, w = sh.eval, pc = (x) => (x * 100).toFixed(1);
   $('#models').innerHTML = `
   <article class="model"><span class="k">Fingerspelling</span><h3>A to Z from one hand</h3><div class="big">${pc(e.unseenPeople)}%<small>right first time</small></div>

@@ -1,6 +1,6 @@
 // Fingerspelling: MediaPipe hand landmarks -> the classifier trained in research/train_alpha2.py.
 let M = null;
-export async function loadLetters() { if (!M) M = await (await fetch('models/alphabet.json')).json(); return M; }
+export async function loadLetters() { if (!M) M = await (await fetch('models/alphabet.json?v=3')).json(); return M; }
 export const lettersModel = () => M;
 const BONES = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[0,9],[9,10],[10,11],[11,12],[0,13],[13,14],[14,15],[15,16],[0,17],[17,18],[18,19],[19,20]];
 const TIPS = [4, 8, 12, 16, 20];

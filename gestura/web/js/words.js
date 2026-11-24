@@ -1,9 +1,11 @@
 // Word-level signs.
 // 1. Google Isolated Sign Language Recognition 1st-place ensemble (Kaggle, MIT licence) turns a sign's landmarks into a
-//    1,152-number description of the movement (models/signs.onnx, int8 matrix layers).
+//    1,152-number description of the movement (models/signs-emb-v2.onnx, int8 matrix layers).
 // 2. A classifier we trained on ASL Citizen (real Deaf and hearing signers) maps that description to one of our
 //    everyday words (models/signs_head.json). See research/train_words.py for training and testing.
 // Input frames: 543 landmarks × 3 in the order face (468), left hand (21), pose (33), right hand (21), unmirrored video.
+// Bump MV whenever a model file changes: model files are cached by browsers for a week.
+export const MV = '3';
 let session = null, head = null, ortLib = null, loading = null;
 export function loadWords() {
   if (!loading) loading = (async () => {
@@ -11,9 +13,9 @@ export function loadWords() {
     ortLib.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/';
     ortLib.env.wasm.numThreads = 1;
     const [meta, bin, sess] = await Promise.all([
-      fetch('models/signs_head.json').then((r) => r.json()),
-      fetch('models/signs_head.bin').then((r) => r.arrayBuffer()),
-      ortLib.InferenceSession.create('models/signs.onnx', { executionProviders: ['wasm'] }),
+      fetch(`models/signs_head.json?v=${MV}`).then((r) => r.json()),
+      fetch(`models/signs_head.bin?v=${MV}`).then((r) => r.arrayBuffer()),
+      ortLib.InferenceSession.create(`models/signs-emb-v2.onnx?v=${MV}`, { executionProviders: ['wasm'] }),
     ]);
     // weights are float32, stored layer by layer: W (in x out, row-major) then b (out)
     let o = 0; const take = (n) => { const x = new Float32Array(bin, o, n); o += n * 4; return x; };
@@ -62,12 +64,24 @@ function mlp(x) {
   return e.map((v) => v / s);
 }
 
-// frames: array of Float32Array(1629). Returns [{word, p}] best first.
-export async function classify(frames) {
+async function embed(frames) {
   const T = frames.length, x = new Float32Array(T * F); frames.forEach((f, i) => x.set(f, i * F));
   const out = await session.run({ [session.inputNames[0]]: new ortLib.Tensor('float32', x, [T, 543, 3]) });
-  const emb = Array.from(out.emb.data);
-  return mlp(emb).map((p, i) => ({ word: head.labels[i], p })).sort((a, b) => b.p - a.p);
+  // the sign embedding (1,152 numbers); fails loudly if an outdated model file was loaded
+  const e = out.emb || Object.values(out).find((t) => t.data.length === head.shapes[0][0][0]);
+  if (!e) throw new Error('outdated sign model in the browser cache; reload the page (Ctrl+Shift+R)');
+  return Array.from(e.data);
+}
+// frames: array of Float32Array(1629). Returns [{word, p}] best first.
+// The sign is read three ways (as captured, every second frame, edges trimmed) and the answers averaged, which makes
+// it steadier across signing speeds and camera frame rates.
+export async function classify(frames) {
+  const T = frames.length, views = [frames];
+  if (T >= 12) views.push(frames.filter((_, i) => i % 2 === 0));
+  if (T >= 10) { const c = Math.max(1, Math.round(T * 0.12)); views.push(frames.slice(c, T - c)); }
+  const probs = []; for (const v of views) probs.push(mlp(await embed(v)));
+  const avg = probs[0].map((_, i) => probs.reduce((s, p) => s + p[i], 0) / probs.length);
+  return avg.map((p, i) => ({ word: head.labels[i], p })).sort((a, b) => b.p - a.p);
 }
 
 // Splits a live stream into signs: a sign starts when a hand comes up into signing space and ends once the hands

@@ -7,7 +7,7 @@ const [base, fps, shard, nshards, outFile, kind] = [process.argv[2], +process.ar
   const b = await chromium.launch(); const p = await b.newPage(); p.on('console', (m) => { if (m.text().startsWith('E2E')) console.log(m.text()); });
   await p.goto(base + '/#/about'); await p.waitForTimeout(500);
   const words = (await (await fetch(base + '/_seed/_index.json')).json());
-  const list = Object.keys(words).sort().filter((_, i) => i % nshards === shard);
+  const list = process.env.WORDS ? process.env.WORDS.split(',') : Object.keys(words).sort().filter((_, i) => i % nshards === shard);
   const res = await p.evaluate(async ({ list, fps, kind }) => {
     const V = await import('/js/vision.js'), W = await import('/js/words.js');
     await W.loadWords(); const det = await V.detector(kind, 'VIDEO', 'e2e');
