@@ -44,15 +44,18 @@ export function blend(probs, feat) {
 
 // Turns a stream of per-frame probabilities into committed letters: a letter must lead for ~0.45 s.
 export class Speller {
-  constructor({ hold = 450, minP = 0.55 } = {}) { this.hold = hold; this.minP = minP; this.ema = null; this.cand = null; this.since = 0; this.last = null; this.gap = 0; }
+  constructor({ hold = 450, minP = 0.45 } = {}) { this.hold = hold; this.minP = minP; this.ema = null; this.cand = null; this.since = 0; this.last = null; this.gap = 0; }
   push(probs, t) {
     this.ema = this.ema ? this.ema.map((v, i) => 0.6 * v + 0.4 * probs[i]) : probs.slice();
     let k = 0; for (let i = 1; i < this.ema.length; i++) if (this.ema[i] > this.ema[k]) k = i;
     const L = M.letters[k], p = this.ema[k];
     if (L !== this.cand) { this.cand = L; this.since = t; }
+    // double letters (BOOK, HELLO) are signed with a small bounce: a dip in confidence re-arms the same letter
+    if (this.last && L === this.last && p < this.minP * 0.75) { this.since = t; this.rearm = true; }
+    if (L === this.last && this.rearm && p >= this.minP) { this.last = null; this.rearm = false; }
     const ready = p >= this.minP && t - this.since >= this.hold && L !== this.last;
-    if (ready) { this.last = L; return { commit: L, p, top: k }; }
+    if (ready) { this.last = L; this.rearm = false; return { commit: L, p, top: k }; }
     return { lead: L, p, progress: Math.min(1, (t - this.since) / this.hold) };
   }
-  handLost() { this.last = null; this.ema = null; this.cand = null; }
+  handLost() { this.last = null; this.ema = null; this.cand = null; this.rearm = false; }
 }

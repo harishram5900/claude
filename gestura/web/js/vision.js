@@ -53,7 +53,7 @@ class Holistic {
 // machine (common with software or weak integrated graphics), it switches to the CPU by itself.
 // `tag` gives a separate instance (each instance needs its own increasing timestamps, e.g. live camera vs a video file).
 class Adaptive {
-  constructor(kind, mode, gpu) { Object.assign(this, { kind, mode, gpu, inner: null, times: [], swapping: null }); }
+  constructor(kind, mode, gpu) { Object.assign(this, { kind, mode, gpu, inner: null, times: [] }); }
   async init() {
     const cpu = new URLSearchParams(location.search).has('cpu');
     if (!cpu) { try { this.inner = await make(this.kind, this.mode, true); this.onGPU = true; return this; } catch { /* no GPU */ } }
@@ -61,11 +61,10 @@ class Adaptive {
   }
   detectForVideo(video, ts) {
     const t = performance.now(), r = this.inner.detectForVideo(video, ts), dt = performance.now() - t;
-    if (this.onGPU && !this.swapping && this.times.push(dt) >= 12) {
-      const med = this.times.slice(4).sort((a, b) => a - b)[4];
-      if (med > 120) this.swapping = make(this.kind, this.mode, false).then((c) => { this.inner = c; this.onGPU = false; this.times = []; console.info(`[gestura] ${this.kind}: GPU ${Math.round(med)} ms/frame, switched to CPU`); }).catch(() => {});
-      else this.times = [];
-      if (med <= 120) this.onGPU = 'checked';
+    // judge the GPU once, on frames 2-6 (the first includes warm-up); switch to the CPU if it is slow here
+    if (this.onGPU === true && this.times.push(dt) >= 6) {
+      const med = this.times.slice(1).sort((a, b) => a - b)[2]; this.onGPU = 'checked';
+      if (med > 120) make(this.kind, this.mode, false).then((c) => { this.inner = c; this.onGPU = false; console.info(`[gestura] ${this.kind}: GPU ${Math.round(med)} ms/frame here, switched to CPU`); }).catch(() => {});
     }
     return r;
   }
